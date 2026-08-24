@@ -1,0 +1,2645 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资源导航管理后台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      min-height: 100vh;
+    }
+
+    /* 登录页 */
+    .login-page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .login-box {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .login-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #f0f6fc;
+      margin-bottom: 8px;
+    }
+
+    .login-subtitle {
+      font-size: 14px;
+      color: #6e7681;
+      margin-bottom: 30px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      color: #f0f6fc;
+      font-size: 16px;
+      margin-bottom: 16px;
+      outline: none;
+    }
+
+    .login-input:focus {
+      border-color: #3b82f6;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .login-btn:hover {
+      opacity: 0.9;
+    }
+
+    .login-error {
+      color: #f85149;
+      font-size: 14px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* 管理页 */
+    .admin-page {
+      display: none;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      padding-top: 20px;
+      border-bottom: 1px solid #30363d;
+      /* 滚动时顶栏吸顶，长表格下仍可快速操作 */
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: #0d1117;
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #f0f6fc;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid #30363d;
+      background: #21262d;
+      color: #c9d1d9;
+      transition: background 0.2s;
+    }
+
+    .btn-sm:hover {
+      background: #30363d;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-success {
+      background: #238636;
+      color: white;
+    }
+
+    .btn-warning {
+      background: #9e6a03;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #da3633;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #21262d;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+    }
+
+    /* 统计卡片 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #3b82f6;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #6e7681;
+      margin-top: 4px;
+    }
+
+    /* 资源表格 */
+    .resource-section {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 30px;
+      max-width: 100%;
+      width: 100%;
+    }
+
+    .section-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f0f6fc;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #8b949e;
+      border-bottom: 1px solid #30363d;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 16px 20px;
+      font-size: 14px;
+      border-bottom: 1px solid #21262d;
+      vertical-align: top;
+    }
+
+    tr:hover {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .resource-title {
+      font-weight: 500;
+      color: #f0f6fc;
+      margin-bottom: 4px;
+    }
+
+    .resource-desc {
+      font-size: 12px;
+      color: #6e7681;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      background: rgba(59, 130, 246, 0.1);
+      color: #3b82f6;
+      font-size: 12px;
+      border-radius: 4px;
+      margin-right: 4px;
+      margin-bottom: 4px;
+    }
+
+    .badge-hot {
+      display: inline-block;
+      padding: 2px 6px;
+      background: linear-gradient(135deg, #da3633, #f85149);
+      color: white;
+      font-size: 11px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    /* 模态框 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f0f6fc;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #6e7681;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+
+    .modal-close:hover {
+      background: #21262d;
+      color: #f0f6fc;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #c9d1d9;
+      margin-bottom: 6px;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      padding: 10px 12px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      color: #f0f6fc;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+      border-color: #3b82f6;
+    }
+
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #3b82f6;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 16px 20px;
+      border-top: 1px solid #30363d;
+    }
+
+    /* 网盘输入组 */
+    .pan-group {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .pan-group-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #f0f6fc;
+      margin-bottom: 12px;
+    }
+
+    .pan-group-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 12px;
+    }
+
+    /* 导出代码块 */
+    .code-block {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #c9d1d9;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .empty-text {
+      font-size: 16px;
+      color: #6e7681;
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .form-row, .pan-group-row {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+      }
+
+      .header-actions {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        flex: 1;
+        min-width: 120px;
+      }
+
+      th, td {
+        padding: 12px 16px;
+      }
+
+      .resource-desc {
+        max-width: 200px;
+      }
+    }
+
+    /* 手机端精细适配 */
+    @media (max-width: 480px) {
+      .admin-page { padding: 12px; }
+      .header { flex-direction: column; gap: 12px; align-items: stretch; }
+      .header-actions { width: 100%; }
+      .header-actions .btn { flex: 1 1 100%; }
+      .stat-value { font-size: 26px; }
+      .section-header-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .movie-search-bar { flex-direction: column; }
+      .movie-search-bar select, .movie-search-bar .btn { width: 100%; }
+    }
+
+    /* API 配置提示 */
+    .api-config-hint {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #8b949e;
+    }
+
+    .api-config-hint a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+
+    .api-config-hint a:hover {
+      text-decoration: underline;
+    }
+    /* 影视资源 */
+    .tab-nav { display: flex; gap: 0; margin-bottom: 30px; border-bottom: 1px solid #30363d; }
+    .tab-nav button { padding: 12px 24px; background: none; border: none; color: #6e7681; cursor: pointer; font-size: 15px; font-weight: 500; position: relative; transition: color 0.2s; }
+    .tab-nav button.active { color: #f59e0b; }
+    .tab-nav button.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: #f59e0b; }
+    .tab-nav button:hover { color: #c9d1d9; }
+    .movie-section { display: none; }
+    .movie-section.active { display: block; }
+    .resource-section.movie-section { display: none; }
+    .resource-section.movie-section.active { display: block; }
+    .movie-search-bar { display: flex; gap: 12px; margin-bottom: 20px; }
+    .movie-search-bar input { flex: 1; padding: 10px 16px; background: #21262d; border: 1px solid #30363d; border-radius: 8px; color: #f0f6fc; font-size: 15px; outline: none; }
+    .movie-search-bar input:focus { border-color: #f59e0b; }
+    .movie-search-bar select { padding: 10px 16px; background: #21262d; border: 1px solid #30363d; border-radius: 8px; color: #c9d1d9; font-size: 15px; outline: none; }
+    .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+    .movie-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; overflow: hidden; cursor: pointer; transition: border-color 0.2s, transform 0.2s; }
+    .movie-card:hover { border-color: #f59e0b; transform: translateY(-2px); }
+    .movie-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; background: #21262d; display: block; }
+    .movie-card .movie-info { padding: 10px; }
+    .movie-card .movie-title { font-size: 13px; font-weight: 500; color: #f0f6fc; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .movie-card .movie-meta { font-size: 11px; color: #6e7681; margin-top: 4px; }
+    .movie-card .movie-pan { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #3b82f6; margin-top: 6px; }
+    .movie-detail-preview { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; margin-top: 16px; display: none; }
+    .movie-detail-preview .preview-flex { display: flex; gap: 20px; }
+    .movie-detail-preview img { width: 150px; border-radius: 8px; flex-shrink: 0; }
+    .movie-detail-preview .preview-info { flex: 1; }
+    .movie-detail-preview .preview-info h3 { margin: 0 0 8px; color: #f0f6fc; }
+    .movie-detail-preview .preview-info p { margin: 4px 0; font-size: 13px; color: #8b949e; line-height: 1.5; }
+    .trending-card { display: flex; align-items: center; gap: 10px; background: #21262d; border: 1px solid #30363d; border-radius: 8px; padding: 8px; cursor: pointer; transition: all .15s; }
+    .trending-card:hover { border-color: #f59e0b; }
+    .trending-card.checked { border-color: #3b82f6; background: #1a2233; }
+    .trending-card img { width: 60px; height: 90px; object-fit: cover; border-radius: 4px; background: #0d1117; }
+    .trending-card .trending-info { flex: 1; min-width: 0; }
+    .trending-card .trending-title { font-size: 13px; font-weight: 500; color: #f0f6fc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .trending-card .trending-meta { font-size: 11px; color: #6e7681; margin-top: 2px; }
+    .trending-card .trending-check { width: 18px; height: 18px; accent-color: #3b82f6; cursor: pointer; flex-shrink: 0; }
+
+    /* ====== 默认卡片管理 - 分类标签横排（优化版） ====== */
+    .dc-toolbar { display: flex; flex-direction: column; gap: 20px; margin-bottom: 28px; }
+    .dc-cat-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%; }
+    .dc-cat-label { font-size: 13px; color: #6e7681; font-weight: 600; white-space: nowrap; letter-spacing: 0.5px; text-transform: uppercase; flex-shrink: 0; }
+    .dc-cat-tabs { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0; }
+    .dc-cat-tab { cursor: pointer; font-size: 13px; color: #8b949e; padding: 8px 18px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 500; letter-spacing: 0.2px; }
+    .dc-cat-tab:hover { color: #f0f6fc; background: #21262d; border-color: #484f58; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .dc-cat-tab.active { color: #fff; background: linear-gradient(135deg, #1e3a5f, #1a2744); border-color: rgba(59,130,246,0.6); box-shadow: 0 2px 12px rgba(59,130,246,0.25), inset 0 1px 0 rgba(255,255,255,0.05); font-weight: 600; }
+    .dc-toolbar-actions { display: flex; gap: 12px; align-items: center; }
+
+    /* ====== 默认卡片管理 - 网格布局（优化版） ====== */
+    .dc-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; width: 100%; min-width: 0; overflow: hidden; }
+    .dc-grid > * { min-width: 0; overflow: hidden; }
+    .dc-card { background: linear-gradient(145deg, #161b22, #1c2129); border: 1px solid #30363d; border-radius: 14px; padding: 22px 14px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; position: relative; user-select: none; overflow: hidden; min-width: 0; }
+    .dc-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, rgba(59,130,246,0.3), transparent); opacity: 0; transition: opacity 0.3s; }
+    .dc-card:hover { background: linear-gradient(145deg, #1c2330, #222936); border-color: #484f58; transform: translateY(-4px) scale(1.02); box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(59,130,246,0.15); }
+    .dc-card:hover::before { opacity: 1; }
+    .dc-card.editing { background: linear-gradient(145deg, #1a2332, #1c2940); border-color: rgba(59,130,246,0.6); box-shadow: 0 0 0 2px rgba(59,130,246,0.2), 0 8px 24px rgba(59,130,246,0.15); }
+    .dc-card.dragging { opacity: 0.35; transform: scale(0.95); }
+    .dc-card.drag-over { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.35), 0 8px 24px rgba(59,130,246,0.2); background: linear-gradient(145deg, #1a2740, #1c2d48); }
+    .dc-card-inner { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .dc-card-icon { width: 48px; height: 48px; font-size: 26px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.08)); border-radius: 14px; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .dc-card:hover .dc-card-icon { transform: scale(1.1) rotate(-3deg); box-shadow: 0 4px 16px rgba(59,130,246,0.2); background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(139,92,246,0.15)); }
+    .dc-card-name { font-size: 13px; color: #e6edf3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; font-weight: 500; letter-spacing: 0.3px; line-height: 1.4; }
+    .dc-edit-panel { display: flex; flex-direction: column; gap: 8px; }
+    .dc-edit-input { padding: 8px 10px; border-radius: 8px; border: 1px solid #30363d; background: #0d1117; color: #f0f6fc; font-size: 13px; outline: none; width: 100%; transition: all 0.2s; }
+    .dc-edit-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+    .dc-edit-actions { display: flex; gap: 6px; justify-content: center; margin-top: 4px; }
+    .dc-edit-btn { padding: 6px 14px; border: none; border-radius: 8px; font-size: 12px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .dc-edit-btn:hover { transform: translateY(-1px); }
+    .dc-save-btn { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.3); }
+    .dc-save-btn:hover { box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
+    .dc-del-btn { background: rgba(218,54,51,0.15); color: #f85149; border: 1px solid rgba(218,54,51,0.3); }
+    .dc-del-btn:hover { background: rgba(218,54,51,0.25); }
+    .dc-cancel-btn { background: #21262d; color: #8b949e; border: 1px solid #30363d; }
+    .dc-cancel-btn:hover { background: #30363d; color: #c9d1d9; }
+    .dc-add-card { background: linear-gradient(145deg, #161b22, #1a1f28); border: 2px dashed #383f4a; border-radius: 14px; padding: 22px 14px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #6e7681; }
+    .dc-add-card:hover { background: linear-gradient(145deg, #1c2330, #202836); border-color: #484f58; border-style: solid; color: #a8b2c1; transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .dc-add-card .dc-add-icon { width: 48px; height: 48px; font-size: 24px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.06)); border-radius: 14px; transition: all 0.3s; }
+    .dc-add-card:hover .dc-add-icon { transform: scale(1.1); background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.12)); }
+
+    /* 响应式断点优化 */
+    @media (max-width: 1400px) { .dc-grid { gap: 14px; } }
+    @media (max-width: 1200px) { .dc-grid { grid-template-columns: repeat(5, 1fr); gap: 12px; } .dc-card { padding: 18px 10px; } }
+    @media (max-width: 900px) { .dc-grid { grid-template-columns: repeat(4, 1fr); gap: 12px; } .dc-card { padding: 16px 8px; } }
+    @media (max-width: 700px) { .dc-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } .dc-card { padding: 14px 6px; border-radius: 10px; } .dc-card-icon { width: 36px; height: 36px; font-size: 18px; border-radius: 10px; } .dc-card-name { font-size: 11px; } .dc-cat-tab { padding: 6px 12px; font-size: 12px; } }
+    @media (max-width: 450px) { .dc-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    /* ====== UI 优化增强（追加） ====== */
+    /* 资源表格：长列表内部滚动 + 吸顶表头，1100+ 行不再撑爆页面 */
+    .table-container { max-height: 70vh; overflow: auto; }
+    .table-container thead th { position: sticky; top: 0; background: #161b22; z-index: 5; }
+    .table-container tbody td:nth-child(5) { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .table-container tbody td:nth-child(1) { max-width: 340px; }
+    /* 统计卡片增强 */
+    .stat-card { background: linear-gradient(135deg, #161b22, #1a2230); transition: transform 0.2s, border-color 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); border-color: #3b82f6; }
+    /* 标签导航增强 */
+    .tab-nav { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid #30363d; }
+    .tab-nav button { background: transparent; border: none; color: #8b949e; padding: 12px 20px; font-size: 15px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+    .tab-nav button:hover { color: #c9d1d9; }
+    .tab-nav button.active { color: #f0f6fc; border-bottom-color: #3b82f6; }
+    /* 空状态增强 */
+    .empty-state { padding: 60px 20px; text-align: center; color: #6e7681; }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    /* 窄屏适配 */
+    @media (max-width: 768px) {
+      .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .header-actions { width: 100%; }
+      .admin-page { padding: 12px; }
+      .table-container { max-height: 60vh; }
+    }
+</style>
+</head>
+<body>
+  <!-- 登录页 -->
+  <div class="login-page" id="loginPage">
+    <div class="login-box">
+      <h1 class="login-title">资源导航管理后台</h1>
+      <p class="login-subtitle">请输入密码继续</p>
+      <input type="password" class="login-input" id="passwordInput" placeholder="密码" onkeypress="if(event.key==='Enter')login()">
+      <button class="login-btn" onclick="login()">进入管理后台</button>
+      <p class="login-error" id="loginError">密码错误</p>
+    </div>
+  </div>
+
+  <!-- 管理页 -->
+  <div class="admin-page" id="adminPage">
+    <div class="header">
+      <h1 class="header-title">资源分享管理后台</h1>
+      <div class="header-actions">
+        <button class="btn btn-success" onclick="exportData()">导出 JSON</button>
+        <button class="btn btn-warning" onclick="importData()">导入 JSON</button>
+        <button id="btnLoadResources" class="btn btn-secondary" style="margin-right:8px;background:#238636" onclick="loadAllResourcesFromApi()">加载云端数据</button>
+        <button class="btn btn-secondary" onclick="openPasswordModal()">修改密码</button>
+        <button class="btn btn-secondary" onclick="openApiConfigModal()">API 配置</button>
+        <button class="btn btn-secondary" onclick="logout()">退出</button>
+      </div>
+    </div>
+    <div class="tab-nav">
+      <button class="active" onclick="switchTab('resources')">📦 资源管理</button>
+      <button onclick="switchTab('movies')">🎬 影视资源</button>
+      <button onclick="switchTab('defaultcards')">🃏 默认卡片</button>
+    </div>
+
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">资源总数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statHot">0</div>
+        <div class="stat-label">热门资源</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statCategories">0</div>
+        <div class="stat-label">分类数量</div>
+      </div>
+    </div>
+
+    <!-- 资源列表 -->
+    <div class="resource-section" id="resourceSection">
+      <div class="section-header-bar">
+        <h2 class="section-title">资源列表</h2>
+        <button id="btnAddResource" class="btn btn-primary" onclick="openModal()" style="font-size:13px;padding:8px 18px">+ 添加资源</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>资源信息</th>
+              <th>分类</th>
+              <th>子分类</th>
+              <th>标签</th>
+              <th>链接</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="resourceTable">
+            <!-- 动态生成 -->
+          </tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none">
+          <div class="empty-icon">📦</div>
+          <div class="empty-text">暂无资源,点击"添加资源"开始</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 影视资源管理 -->
+    <div class="resource-section movie-section" id="movieSection">
+      <div class="section-header-bar">
+        <h2 class="section-title">影视资源库</h2>
+      </div>
+      <div class="movie-search-bar">
+        <input type="text" id="movieSearchInput" placeholder="输入影视名称，如：流浪地球、甄嬛传..." onkeydown="if(event.key==='Enter')searchMovie()">
+        <select id="movieSearchType">
+          <option value="movie">电影</option>
+          <option value="tv">电视剧</option>
+        </select>
+        <button class="btn btn-primary" onclick="searchMovie()">🔍 搜索 TMDB</button>
+        <button class="btn btn-warning" onclick="loadTrending()">🔥 热门排行</button>
+      </div>
+      <!-- 热门影视列表（勾选批量导入） -->
+      <div id="trendingPanel" style="display:none;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-weight:600">🔥 TMDB 本周热门（第<span id="trendingPage">1</span>页）</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" onclick="toggleAllTrending(true)">全选</button>
+            <button class="btn btn-sm" onclick="toggleAllTrending(false)">取消全选</button>
+            <button class="btn btn-primary btn-sm" onclick="bulkImportTrending()">📥 批量导入选中</button>
+            <button class="btn btn-sm" onclick="document.getElementById('trendingPanel').style.display='none'">✕ 关闭</button>
+          </div>
+        </div>
+        <div id="trendingPagination" style="display:flex;gap:4px;margin-bottom:12px">
+          <button class="btn btn-sm" onclick="loadTrending(1)">上一页</button>
+          <button class="btn btn-sm" onclick="loadTrending(2)">下一页</button>
+        </div>
+        <div class="trending-grid" id="trendingGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;max-height:500px;overflow-y:auto"></div>
+        <div id="bulkImportStatus" style="margin-top:12px;display:none;color:#6e7681;font-size:13px"></div>
+      </div>
+      <div id="movieSearchStatus" style="color:#6e7681;font-size:13px;margin-bottom:12px;display:none"></div>
+      <div class="movie-grid" id="movieGrid">
+        <div class="empty-state">
+          <div class="empty-icon">🎬</div>
+          <div class="empty-text">搜索影视名称，从 TMDB 获取封面和详情</div>
+        </div>
+      </div>
+      <div class="movie-detail-preview" id="movieDetailPreview">
+        <div class="preview-flex">
+          <img id="moviePreviewPoster" src="" alt="" style="width:150px;border-radius:8px;">
+          <div class="preview-info">
+            <h3 id="moviePreviewTitle"></h3>
+            <p>🎬 导演：<span id="moviePreviewDirector"></span></p>
+            <p>👥 主演：<span id="moviePreviewCast"></span></p>
+            <p>📅 年份：<span id="moviePreviewYear"></span> | ⭐ <span id="moviePreviewRating"></span> | 🏷 <span id="moviePreviewGenres"></span></p>
+            <p style="margin-top:8px" id="moviePreviewOverview"></p>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap" id="moviePanLinks">
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+              <select class="form-select" id="movieAddPanType" style="width:auto;">
+                <option value="baidu">百度网盘</option>
+                <option value="lanzou">蓝奏云</option>
+                <option value="123pan">123网盘</option>
+                <option value="aliyun">移动云盘</option>
+                <option value="quark">夸克网盘</option>
+                <option value="xunlei">迅雷云盘</option>
+              </select>
+              <input type="text" class="form-input" id="movieAddPanLink" placeholder="网盘链接" style="width:220px;">
+              <input type="text" class="form-input" id="movieAddPanCode" placeholder="提取码" style="width:80px;">
+              <button class="btn btn-sm btn-primary" onclick="addMoviePanLink()">+ 添加网盘</button>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:8px">
+              <button class="btn btn-success" onclick="importMovie()">✅ 导入到影视库</button>
+              <button class="btn btn-secondary" onclick="document.getElementById('movieDetailPreview').style.display='none';">取消</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 已入库影视列表 -->
+      <div style="margin-top:40px">
+        <div class="section-header-bar">
+          <h2 class="section-title">已入库影视</h2>
+          <button class="btn btn-warning" onclick="autoMatchAllPan()">🔍 一键补全网盘</button>
+        </div>
+        <div id="autoMatchStatus" style="display:none;color:#6e7681;font-size:13px;margin:8px 0"></div>
+        <div class="movie-grid" id="movieImportedGrid"></div>
+      </div>
+    </div>
+
+  <!-- 默认卡片管理 -->
+  <div class="resource-section" id="defaultCardsSection" style="display:none">
+    <div class="section-header-bar">
+      <h2 class="section-title">📌 默认卡片管理</h2>
+      <div class="dc-toolbar-actions">
+        <button class="btn btn-primary" onclick="dcAddCard()">+ 添加卡片</button>
+        <button class="btn btn-success" id="dcSaveBtn" onclick="dcSaveAll()">保存到后端</button>
+      </div>
+    </div>
+    <div class="dc-cat-bar">
+      <span class="dc-cat-label">📂 分类</span>
+        <div class="dc-cat-tabs" id="dcCatTabs">
+          <button class="dc-cat-tab active" data-cat="home" onclick="dcSelectCat(this,'home')">🏠 主页</button>
+          <button class="dc-cat-tab" data-cat="ai" onclick="dcSelectCat(this,'ai')">🤖 AI工具</button>
+          <button class="dc-cat-tab" data-cat="cloud" onclick="dcSelectCat(this,'cloud')">☁️ 云服务</button>
+          <button class="dc-cat-tab" data-cat="container" onclick="dcSelectCat(this,'container')">🐳 容器运维</button>
+          <button class="dc-cat-tab" data-cat="software" onclick="dcSelectCat(this,'software')">💻 软件工具</button>
+          <button class="dc-cat-tab" data-cat="tools" onclick="dcSelectCat(this,'tools')">🔧 在线工具</button>
+          <button class="dc-cat-tab" data-cat="learning" onclick="dcSelectCat(this,'learning')">📚 学习资源</button>
+          <button class="dc-cat-tab" data-cat="mail" onclick="dcSelectCat(this,'mail')">📧 邮箱域名</button>
+        </div>
+      </div>
+      <div id="dcLoading" style="text-align:center;padding:50px 20px;color:#8b949e;font-size:14px"><div style="display:inline-flex;align-items:center;gap:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>正在加载卡片数据...</div></div>
+      <div id="dcEmpty" style="display:none;text-align:center;padding:50px 20px;color:#6e7681;font-size:14px">📭 暂无卡片，点击右上角"+ 添加卡片"开始</div>
+      <div id="dcList" class="dc-grid"></div>
+  </div>
+
+  </div>  <!-- /admin-page -->
+
+  <!-- 添加/编辑模态框 -->
+  <div class="modal" id="resourceModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">添加资源</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId">
+        <div class="form-group">
+          <label class="form-label">资源标题 *</label>
+          <input type="text" class="form-input" id="resTitle" placeholder="输入资源标题">
+        </div>
+        <div class="form-group">
+          <label class="form-label">资源描述</label>
+          <textarea class="form-textarea" id="resDesc" placeholder="简短描述资源内容"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">主分类 *</label>
+            <select class="form-select" id="resCategory" onchange="onCategoryChange()">
+              <option value="">请选择</option>
+              <option value="software">软件工具</option>
+              <option value="learning">学习资源</option>
+              <option value="tools">实用工具</option>
+              <option value="movie">影视资源</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">子分类(软件工具必选)</label>
+            <select class="form-select" id="resSubCategory">
+              <option value="">请选择</option>
+              <option value="pc">电脑软件</option>
+              <option value="mobile">手机软件</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">标签(用逗号分隔)</label>
+          <input type="text" class="form-input" id="resTags" placeholder="播放器, 工具, PC">
+        </div>
+        <div class="form-group">
+          <label class="form-label">资源链接</label>
+          <input type="url" class="form-input" id="resLink" placeholder="https://example.com">
+        </div>
+
+        <!-- 多网盘 -->
+        <div class="form-group">
+          <label class="form-label">网盘链接</label>
+          <div class="pan-group">
+            <div class="pan-group-title">百度网盘</div>
+            <div class="pan-group-row">
+              <input type="url" class="form-input" id="pan_baidu_link" placeholder="链接">
+              <input type="text" class="form-input" id="pan_baidu_code" placeholder="提取码">
+            </div>
+          </div>
+          <div class="pan-group">
+            <div class="pan-group-title">蓝奏云</div>
+            <div class="pan-group-row">
+              <input type="url" class="form-input" id="pan_lanzou_link" placeholder="链接">
+              <input type="text" class="form-input" id="pan_lanzou_code" placeholder="提取码">
+            </div>
+          </div>
+          <div class="pan-group">
+            <div class="pan-group-title">123网盘</div>
+            <div class="pan-group-row">
+              <input type="url" class="form-input" id="pan_123pan_link" placeholder="链接">
+              <input type="text" class="form-input" id="pan_123pan_code" placeholder="提取码">
+            </div>
+          </div>
+          <div class="pan-group">
+            <div class="pan-group-title">移动云盘</div>
+            <div class="pan-group-row">
+              <input type="url" class="form-input" id="pan_aliyun_link" placeholder="链接">
+              <input type="text" class="form-input" id="pan_aliyun_code" placeholder="提取码">
+            </div>
+          </div>
+          <div class="pan-group">
+            <div class="pan-group-title">夸克网盘</div>
+            <div class="pan-group-row">
+              <input type="url" class="form-input" id="pan_quark_link" placeholder="链接">
+              <input type="text" class="form-input" id="pan_quark_code" placeholder="提取码">
+            </div>
+          </div>
+          <div class="pan-group">
+            <div class="pan-group-title">迅雷云盘</div>
+            <div class="pan-group-row">
+              <input type="url" class="form-input" id="pan_xunlei_link" placeholder="链接">
+              <input type="text" class="form-input" id="pan_xunlei_code" placeholder="提取码">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">图标 URL</label>
+          <div style="display:flex;gap:8px;">
+            <input type="url" class="form-input" id="resIcon" placeholder="https://...或点右侧按钮上传" oninput="previewIcon()" style="flex:1;">
+            <button type="button" class="btn btn-sm" onclick="uploadImage('icon')" style="white-space:nowrap;">📁 上传</button>
+          </div>
+          <img id="iconPreview" style="display:none;width:64px;height:64px;border-radius:8px;margin-top:8px;object-fit:cover;border:1px solid #30363d;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">截图/预览图 URL</label>
+          <div style="display:flex;gap:8px;">
+            <input type="url" class="form-input" id="resScreenshot" placeholder="https://...或点右侧按钮上传" oninput="previewScreenshot()" style="flex:1;">
+            <button type="button" class="btn btn-sm" onclick="uploadImage('screenshot')" style="white-space:nowrap;">📁 上传</button>
+          </div>
+          <img id="screenshotPreview" style="display:none;max-width:100%;max-height:200px;border-radius:8px;margin-top:8px;object-fit:contain;border:1px solid #30363d;">
+        </div>
+        <input type="file" id="_uploadInput" accept="image/*" style="display:none;" onchange="handleImageSelect(this)">
+        <div class="form-group">
+          <label class="checkbox-group">
+            <input type="checkbox" id="resHot">
+            <span>设为热门资源(首页展示)</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveResource()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 修改密码模态框 -->
+  <div class="modal" id="passwordModal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 class="modal-title">修改密码</h3>
+        <button class="modal-close" onclick="closePasswordModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">当前密码</label>
+          <input type="password" class="form-input" id="oldPassword" placeholder="输入当前密码">
+        </div>
+        <div class="form-group">
+          <label class="form-label">新密码</label>
+          <input type="password" class="form-input" id="newPassword" placeholder="输入新密码">
+        </div>
+        <div class="form-group">
+          <label class="form-label">确认新密码</label>
+          <input type="password" class="form-input" id="confirmPassword" placeholder="再次输入新密码">
+        </div>
+        <p id="passwordError" style="color: #f85149; font-size: 14px; display: none;"></p>
+        <p id="passwordSuccess" style="color: #3fb950; font-size: 14px; display: none;">密码修改成功!</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closePasswordModal()">取消</button>
+        <button class="btn btn-primary" onclick="changePassword()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API 配置模态框 -->
+  <div class="modal" id="apiConfigModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">API 配置</h3>
+        <button class="modal-close" onclick="closeApiConfigModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: #8b949e; font-size: 13px; margin-bottom: 16px; line-height: 1.6;">
+          配置 Cloudflare Worker API 地址后,管理后台的数据将同步到云端数据库,小程序端可以实时获取。<br><br>
+          需要先部署 Worker,详见 <a href="../cloudflare/README.md" target="_blank" style="color:#3b82f6;">部署文档</a>。
+        </p>
+        <div class="form-group">
+          <label class="form-label">搜索热词（用逗号分隔）</label>
+          <textarea class="form-input" id="hotTagsInput" rows="2" style="resize:vertical;min-height:40px;" placeholder="7-Zip,Chrome,PS教程,单机游戏"></textarea>
+          <p style="color: #6e7681; font-size: 12px; margin-top: 4px;">
+            用<strong>英文逗号</strong>分隔，如：7-Zip,Chrome,电影天堂。保存后前端搜索页显示这些推荐词。
+          </p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">API 基础地址</label>
+          <input type="text" class="form-input" id="apiBaseUrl" placeholder="https://your-worker.your-subdomain.workers.dev">
+          <p style="color: #6e7681; font-size: 12px; margin-top: 6px;">
+            例如: https://resource-nav-api.your-subdomain.workers.dev
+          </p>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-group">
+            <input type="checkbox" id="apiEnabled">
+            <span>启用 API 同步(勾选后数据读写走云端)</span>
+          </label>
+        </div>
+        <p id="apiConfigError" style="color: #f85149; font-size: 14px; display: none;"></p>
+        <p id="apiConfigSuccess" style="color: #3fb950; font-size: 14px; display: none;">配置已保存!</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeApiConfigModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveApiConfig()">保存配置</button>
+        <button class="btn btn-success" onclick="testApiConnection()">测试连接</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 导出模态框 -->
+  <div class="modal" id="exportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">导出数据</h3>
+        <button class="modal-close" onclick="closeExportModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 12px; color: #8b949e;">复制以下 JSON 代码,可用于导入或备份:</p>
+        <div class="code-block" id="exportCode"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeExportModal()">关闭</button>
+        <button class="btn btn-primary" onclick="copyExport()">复制到剪贴板</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== 配置 ====================
+    var ADMIN_PASSWORD = 'admin123';
+    var STORAGE_KEY = 'resourceNavData';
+    var API_BASE_KEY = 'resourceNavApiBase';
+    var API_ENABLED_KEY = 'resourceNavApiEnabled';
+
+    // Cloudflare Worker API 地址(默认空,使用本地存储)
+    var API_BASE = 'https://api.a520.cc.cd';
+
+    // 分类映射
+    const categoryMap = {
+      'software': '软件工具',
+      'learning': '学习资源',
+      'tools': '实用工具',
+      'movie': '影视资源'
+    };
+
+    const subCategoryMap = {
+      'pc': '电脑软件',
+      'mobile': '手机软件',
+      '': '-',
+    };
+
+    // 网盘配置
+    const panTypes = [
+      { type: 'baidu', name: '百度网盘' },
+      { type: 'lanzou', name: '蓝奏云' },
+      { type: '123pan', name: '123网盘' },
+      { type: 'aliyun', name: '移动云盘' },
+      { type: 'quark', name: '夸克网盘' },
+      { type: 'xunlei', name: '迅雷云盘' }
+    ];
+
+    // 数据存储
+    var resources = [];
+
+    // ==================== API 工具函数 ====================
+
+    // 判断是否使用 API 模式
+    function isApiMode() {
+      return API_BASE && API_BASE.length > 0;
+    }
+
+    // 通用 API 请求
+    async function apiRequest(url, options) {
+      options = options || {};
+      const fullUrl = API_BASE + url;
+      const response = await fetch(fullUrl, {
+        method: options.method || 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: options.body ? JSON.stringify(options.body) : null
+      });
+
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
+
+      const data = await response.json();
+      if (data.code !== 0) {
+        throw new Error(data.msg || 'API 错误');
+      }
+
+      return data;
+    }
+
+    // ==================== 初始化 ====================
+
+    function init() {
+      // 加载保存的 API 配置
+      const savedApiBase = localStorage.getItem(API_BASE_KEY);
+      const savedApiEnabled = localStorage.getItem(API_ENABLED_KEY);
+
+      // 默认启用云模式（首次使用或未配置时自动连接）
+      if (savedApiEnabled === null && !savedApiBase) {
+        API_BASE = 'https://api.a520.cc.cd';
+        localStorage.setItem(API_BASE_KEY, API_BASE);
+        localStorage.setItem(API_ENABLED_KEY, 'true');
+      } else if (savedApiEnabled === 'true' && savedApiBase) {
+        API_BASE = savedApiBase;
+      }
+
+      // 调试：在控制台输出状态
+      console.log('[DEBUG] init() called', { API_BASE: API_BASE, isApiMode: isApiMode(), savedApiBase: savedApiBase, savedApiEnabled: savedApiEnabled });
+
+      // 显示/隐藏 API 配置提示
+      updateApiHint();
+
+      // 显示初始加载状态
+      var emptyEl = document.getElementById('emptyState');
+      if (emptyEl) {
+        emptyEl.style.display = 'block';
+        emptyEl.innerHTML = '<div class="empty-icon">⏳</div><div class="empty-text" style="margin-top:12px">正在从云端加载数据...</div>';
+      }
+
+      if (isApiMode()) {
+        // API 模式:从云端加载
+        loadFromApi();
+      } else {
+        // 本地模式
+        loadLocal();
+        renderTable();
+        updateStats();
+      }
+    }
+
+    function updateApiHint() {
+      const hint = document.getElementById('apiConfigHint');
+      if (!hint) return; // 元素可能不存在，安全跳过
+      if (!isApiMode()) {
+        hint.style.display = 'block';
+      } else {
+        hint.style.display = 'none';
+      }
+    }
+
+    // 从 API 分页加载全部数据（修正：原 total 只取首屏条数，导致只加载前 50/1155 条）
+    async function loadFromApi() {
+      var emptyEl = document.getElementById('emptyState');
+      try {
+        var allData = [];
+        var pageSize = 100;
+        var offset = 0;
+        console.log('[DEBUG] loadFromApi() starting, API_BASE=', API_BASE);
+        // 逐页拉取，直到返回不足一页或为空，确保加载全部记录
+        while (true) {
+          var result = await apiRequest('/api/resources?limit=' + pageSize + '&offset=' + offset);
+          var arr = Array.isArray(result.data) ? result.data : (result.data && result.data.list) || [];
+          console.log('[DEBUG] page offset=' + offset + ' got ' + arr.length + ' items');
+          if (arr.length === 0) break;
+          allData = allData.concat(arr);
+          offset += pageSize;
+          if (arr.length < pageSize) break;
+        }
+        console.log('[DEBUG] loadFromApi() total loaded: ' + allData.length);
+        resources = allData;
+        // 同步到本地作为缓存
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(resources));
+        renderTable();
+        updateStats();
+      } catch (err) {
+        console.error('API 加载失败:', err);
+        // 在页面显示错误信息
+        if (emptyEl) {
+          emptyEl.style.display = 'block';
+          emptyEl.innerHTML = '<div class="empty-icon">⚠️</div><div class="empty-text" style="margin-top:12px;color:#f85149;">API 加载失败: ' + err.message + '<br><button onclick="loadFromApi()" style="margin-top:8px;padding:8px 16px;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;">重试</button></div>';
+        }
+        alert('API 加载失败: ' + err.message + ',使用本地缓存');
+        loadLocal();
+        renderTable();
+        updateStats();
+      }
+    }
+
+    // 本地存储加载
+    function loadLocal() {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          resources = JSON.parse(saved);
+        } catch (e) {
+          resources = [];
+        }
+      }
+    }
+
+    // ==================== 登录相关 ====================
+
+    function login() {
+      var input = document.getElementById('passwordInput').value;
+      if (input === ADMIN_PASSWORD) {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('adminPage').style.display = 'block';
+        sessionStorage.setItem('adminLoggedIn', 'true');
+        renderTable();
+        updateStats();
+      } else {
+        document.getElementById('loginError').style.display = 'block';
+        document.getElementById('passwordInput').value = '';
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem('adminLoggedIn');
+      document.getElementById('adminPage').style.display = 'none';
+      document.getElementById('loginPage').style.display = 'flex';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('loginError').style.display = 'none';
+    }
+
+    // 检查登录状态
+    if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('adminPage').style.display = 'block';
+      init();
+    } else {
+      init();
+    }
+
+    // ==================== 分类切换 ====================
+
+    function onCategoryChange() {
+      var cat = document.getElementById('resCategory').value;
+      var subSelect = document.getElementById('resSubCategory');
+      if (cat === 'software') {
+        subSelect.disabled = false;
+      } else {
+        subSelect.disabled = true;
+        subSelect.value = '';
+      }
+    }
+
+    // ==================== 数据保存 ====================
+
+    async function saveData() {
+      // 始终保存到本地
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(resources));
+
+      // API 模式:同步到云端
+      if (isApiMode()) {
+        try {
+          // 这里可以添加批量同步逻辑
+          // 目前采用单条保存的方式
+        } catch (err) {
+          console.error('API 同步失败:', err);
+        }
+      }
+    }
+
+    // ==================== 统计 ====================
+
+    function updateStats() {
+      var elTotal = document.getElementById('statTotal');
+      var elHot = document.getElementById('statHot');
+      var elCats = document.getElementById('statCategories');
+      if (elTotal) elTotal.textContent = resources.length;
+      if (elHot) elHot.textContent = resources.filter(function(r) { return r.isHot; }).length;
+      var categories = new Set();
+      resources.forEach(function(r) {
+        categories.add(r.category);
+      });
+      if (elCats) elCats.textContent = categories.size;
+    }
+
+    // ==================== 表格渲染 ====================
+
+    
+
+    // ==================== 加载云端数据（按钮触发） ====================
+    async function loadAllResourcesFromApi() {
+      if (!API_BASE) { alert('请先配置 API 地址'); return; }
+      var btn = document.getElementById('btnLoadResources');
+      if (btn) { btn.textContent = '加载中...'; btn.disabled = true; }
+      try {
+        // 使用 offset 分页加载全部数据（与 loadFromApi 一致）
+        var allData = [];
+        var pageSize = 100;
+        var offset = 0;
+        while (true) {
+          var result = await apiRequest('/api/resources?limit=' + pageSize + '&offset=' + offset);
+          var arr = Array.isArray(result.data) ? result.data : (result.data && result.data.list) || [];
+          if (arr.length === 0) break;
+          allData = allData.concat(arr);
+          offset += pageSize;
+          if (arr.length < pageSize) break;
+        }
+        resources = allData;
+        saveData();
+        renderTable();
+        updateStats();
+        alert('云端数据加载完成，共 ' + resources.length + ' 条资源');
+      } catch(e) { alert('加载失败: ' + e.message); }
+      if (btn) { btn.textContent = '加载云端数据'; btn.disabled = false; }
+    }
+
+    function renderTable() {
+      var tbody = document.getElementById('resourceTable');
+      var emptyState = document.getElementById('emptyState');
+
+      if (resources.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+
+      tbody.innerHTML = resources.map(function(res, index) {
+        var panLinksHtml = '';
+        if (res.panLinks && res.panLinks.length > 0) {
+          panLinksHtml = '<br>' + res.panLinks.filter(function(p) { return p.link; }).map(function(p) {
+            return '<span style="color:#9e6a03;font-size:12px;">' + p.name + (p.code ? ' (码:' + p.code + ')' : '') + '</span>';
+          }).join('<br>');
+        }
+
+        return '<tr>' +
+          '<td>' +
+            '<div class="resource-title">' + escapeHtml(res.title) + '</div>' +
+            '<div class="resource-desc">' + escapeHtml(res.description || '') + '</div>' +
+          '</td>' +
+          '<td>' + (categoryMap[res.category] || res.category) + '</td>' +
+          '<td>' + (subCategoryMap[res.subcategory] || (res.subcategory || '-')) + '</td>' +
+          '<td>' +
+            (res.tags || []).map(function(tag) { return '<span class="tag">' + escapeHtml(tag) + '</span>'; }).join('') +
+          '</td>' +
+          '<td>' +
+            (res.link ? '<a href="' + res.link + '" target="_blank" style="color:#3b82f6;text-decoration:none;">访问链接</a>' : '-') +
+            panLinksHtml +
+          '</td>' +
+          '<td>' +
+            (res.isHot ? '<span class="badge-hot">HOT</span>' : '<span style="color:#6e7681;">-</span>') +
+          '</td>' +
+          '<td>' +
+            '<div class="action-btns">' +
+              '<button class="btn btn-primary btn-small" onclick="editResource(' + index + ')">编辑</button>' +
+              '<button class="btn btn-danger btn-small" onclick="deleteResource(' + index + ')">删除</button>' +
+            '</div>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    // ==================== 模态框操作 ====================
+
+    function openModal() {
+      document.getElementById('modalTitle').textContent = '添加资源';
+      document.getElementById('editId').value = '';
+      document.getElementById('resTitle').value = '';
+      document.getElementById('resDesc').value = '';
+      document.getElementById('resCategory').value = '';
+      document.getElementById('resSubCategory').value = '';
+      onCategoryChange();
+      document.getElementById('resTags').value = '';
+      document.getElementById('resLink').value = '';
+      document.getElementById('resIcon').value = '';
+      document.getElementById('resScreenshot').value = '';
+      document.getElementById('iconPreview').style.display = 'none';
+      document.getElementById('screenshotPreview').style.display = 'none';
+      document.getElementById('resHot').checked = false;
+
+      panTypes.forEach(function(pan) {
+        document.getElementById('pan_' + pan.type + '_link').value = '';
+        document.getElementById('pan_' + pan.type + '_code').value = '';
+      });
+
+      document.getElementById('resourceModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('resourceModal').classList.remove('active');
+    }
+
+    // ==================== 保存资源 ====================
+
+    async function saveResource() {
+      var id = document.getElementById('editId').value;
+      var title = document.getElementById('resTitle').value.trim();
+      var description = document.getElementById('resDesc').value.trim();
+      var category = document.getElementById('resCategory').value;
+      var subCategory = document.getElementById('resSubCategory').value;
+      var tagsStr = document.getElementById('resTags').value.trim();
+      var link = document.getElementById('resLink').value.trim();
+      var icon = document.getElementById('resIcon').value.trim();
+      var isHot = document.getElementById('resHot').checked;
+
+      if (!title) {
+        alert('请输入资源标题');
+        return;
+      }
+      if (!category) {
+        alert('请选择分类');
+        return;
+      }
+      if (category === 'software' && !subCategory) {
+        alert('软件工具类必须选择子分类');
+        return;
+      }
+
+      var tags = tagsStr ? tagsStr.split(/[,,]/).map(function(t) { return t.trim(); }).filter(function(t) { return t; }) : [];
+
+      var panLinks = [];
+      panTypes.forEach(function(pan) {
+        var panLink = document.getElementById('pan_' + pan.type + '_link').value.trim();
+        var panCode = document.getElementById('pan_' + pan.type + '_code').value.trim();
+        if (panLink) {
+          panLinks.push({
+            type: pan.type,
+            name: pan.name,
+            link: panLink,
+            code: panCode
+          });
+        }
+      });
+
+      var screenshot = document.getElementById('resScreenshot').value.trim();
+
+      var resource = {
+        id: id || Date.now().toString(),
+        title: title,
+        description: description,
+        category: category,
+        subcategory: subCategory,
+        tags: tags,
+        link: link,
+        panLinks: panLinks,
+        icon: icon || 'https://picsum.photos/100/100?random=' + Math.floor(Math.random() * 100),
+        screenshot: screenshot,
+        clicks: 0,
+        isHot: isHot
+      };
+
+      // API 模式
+      if (isApiMode()) {
+        try {
+          if (id) {
+            // 更新
+            await apiRequest('/api/resources/' + id, {
+              method: 'PUT',
+              body: resource
+            });
+            // 更新本地数组
+            var index = resources.findIndex(function(r) { return r.id === id; });
+            if (index !== -1) {
+              resources[index] = resource;
+            }
+          } else {
+            // 创建
+            const result = await apiRequest('/api/resources', {
+              method: 'POST',
+              body: resource
+            });
+            resource.id = result.id || resource.id;
+            resources.push(resource);
+          }
+          saveData();
+          renderTable();
+          updateStats();
+          closeModal();
+        } catch (err) {
+          alert('保存失败: ' + err.message);
+        }
+      } else {
+        // 本地模式
+        if (id) {
+          var index = -1;
+          for (var i = 0; i < resources.length; i++) {
+            if (resources[i].id === id) {
+              index = i;
+              break;
+            }
+          }
+          if (index !== -1) {
+            resource.clicks = resources[index].clicks || 0;
+            resources[index] = resource;
+          }
+        } else {
+          resources.push(resource);
+        }
+
+        saveData();
+        renderTable();
+        updateStats();
+        closeModal();
+      }
+    }
+
+    // ==================== 编辑资源 ====================
+
+    function editResource(index) {
+      var res = resources[index];
+      document.getElementById('modalTitle').textContent = '编辑资源';
+      document.getElementById('editId').value = res.id;
+      document.getElementById('resTitle').value = res.title;
+      document.getElementById('resDesc').value = res.description || '';
+
+      document.getElementById('resCategory').value = res.category || '';
+      var sub = res.subcategory || '';
+      document.getElementById('resSubCategory').value = sub;
+      document.getElementById('resSubCategory').disabled = (res.category !== 'software');
+
+      document.getElementById('resTags').value = (res.tags || []).join(', ');
+      document.getElementById('resLink').value = res.link || '';
+      document.getElementById('resIcon').value = res.icon || '';
+      document.getElementById('resScreenshot').value = res.screenshot || '';
+      if (res.icon) { previewIcon(); }
+      if (res.screenshot) { previewScreenshot(); }
+      document.getElementById('resHot').checked = res.isHot || false;
+
+      panTypes.forEach(function(pan) {
+        var found = null;
+        if (res.panLinks) {
+          for (var j = 0; j < res.panLinks.length; j++) {
+            if (res.panLinks[j].type === pan.type) {
+              found = res.panLinks[j];
+              break;
+            }
+          }
+        }
+        document.getElementById('pan_' + pan.type + '_link').value = found ? found.link : '';
+        document.getElementById('pan_' + pan.type + '_code').value = found ? found.code : '';
+      });
+
+      document.getElementById('resourceModal').classList.add('active');
+    }
+
+    // ==================== 删除资源 ====================
+
+    async function deleteResource(index) {
+      if (!confirm('确定要删除这个资源吗?')) return;
+
+      var res = resources[index];
+
+      // API 模式
+      if (isApiMode()) {
+        try {
+          await apiRequest('/api/resources/' + res.id, {
+            method: 'DELETE'
+          });
+          resources.splice(index, 1);
+          saveData();
+          renderTable();
+          updateStats();
+        } catch (err) {
+          alert('删除失败: ' + err.message);
+        }
+      } else {
+        // 本地模式
+        resources.splice(index, 1);
+        saveData();
+        renderTable();
+        updateStats();
+      }
+    }
+
+    // ==================== 导出导入 ====================
+
+    function exportData() {
+      var exportObj = resources.map(function(r) {
+        return {
+          id: r.id,
+          title: r.title,
+          description: r.description,
+          category: r.category,
+          tags: r.tags,
+          link: r.link,
+          panLinks: r.panLinks || [],
+          icon: r.icon,
+          clicks: r.clicks || 0,
+          isHot: r.isHot || false
+        };
+      });
+
+      var jsonStr = JSON.stringify(exportObj, null, 2);
+      document.getElementById('exportCode').textContent = jsonStr;
+      document.getElementById('exportModal').classList.add('active');
+    }
+
+    function closeExportModal() {
+      document.getElementById('exportModal').classList.remove('active');
+    }
+
+    function copyExport() {
+      var code = document.getElementById('exportCode').textContent;
+      navigator.clipboard.writeText(code).then(function() {
+        alert('已复制到剪贴板!');
+      }).catch(function() {
+        var textarea = document.createElement('textarea');
+        textarea.value = code;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('已复制到剪贴板!');
+      });
+    }
+
+    function importData() {
+      document.getElementById('importFile').click();
+    }
+
+    function handleImport(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          var data = JSON.parse(e.target.result);
+          if (Array.isArray(data)) {
+            // API 模式:批量导入到云端
+            if (isApiMode()) {
+              try {
+                for (var i = 0; i < data.length; i++) {
+                  await apiRequest('/api/resources', {
+                    method: 'POST',
+                    body: data[i]
+                  });
+                }
+                await loadFromApi();
+                alert('导入成功!共 ' + data.length + ' 条资源已同步到云端');
+              } catch (err) {
+                alert('云端导入失败: ' + err.message);
+              }
+            } else {
+              // 本地模式
+              resources = data;
+              saveData();
+              renderTable();
+              updateStats();
+              alert('导入成功!共 ' + data.length + ' 条资源');
+            }
+          } else {
+            alert('文件格式错误,需要 JSON 数组');
+          }
+        } catch (err) {
+          alert('解析失败:' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    // ==================== HTML 转义 ====================
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      var div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ==================== 密码修改 ====================
+
+    function openPasswordModal() {
+      document.getElementById('passwordModal').classList.add('active');
+      document.getElementById('oldPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmPassword').value = '';
+      document.getElementById('passwordError').style.display = 'none';
+      document.getElementById('passwordSuccess').style.display = 'none';
+    }
+
+    function closePasswordModal() {
+      document.getElementById('passwordModal').classList.remove('active');
+    }
+
+    function changePassword() {
+      var oldPwd = document.getElementById('oldPassword').value;
+      var newPwd = document.getElementById('newPassword').value;
+      var confirmPwd = document.getElementById('confirmPassword').value;
+      var errorEl = document.getElementById('passwordError');
+      var successEl = document.getElementById('passwordSuccess');
+
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      if (oldPwd !== ADMIN_PASSWORD) {
+        errorEl.textContent = '当前密码错误';
+        errorEl.style.display = 'block';
+        return;
+      }
+      if (!newPwd) {
+        errorEl.textContent = '请输入新密码';
+        errorEl.style.display = 'block';
+        return;
+      }
+      if (newPwd !== confirmPwd) {
+        errorEl.textContent = '两次输入的新密码不一致';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      ADMIN_PASSWORD = newPwd;
+      localStorage.setItem('adminPassword', newPwd);
+      successEl.style.display = 'block';
+
+      setTimeout(function() {
+        closePasswordModal();
+      }, 1500);
+    }
+
+    // 加载保存的密码
+    var savedPassword = localStorage.getItem('adminPassword');
+    if (savedPassword) {
+      ADMIN_PASSWORD = savedPassword;
+    }
+
+    // ==================== API 配置 ====================
+
+    function openApiConfigModal() {
+      document.getElementById('apiConfigModal').classList.add('active');
+      document.getElementById('apiBaseUrl').value = API_BASE || '';
+      document.getElementById('apiEnabled').checked = isApiMode();
+      document.getElementById('apiConfigError').style.display = 'none';
+      document.getElementById('apiConfigSuccess').style.display = 'none';
+      // 加载热词
+      loadHotTagsToForm();
+    }
+
+    // 从云端/本地加载热词
+    async function loadHotTagsToForm() {
+      var el = document.getElementById('hotTagsInput');
+      if (!isApiMode()) {
+        var local = JSON.parse(localStorage.getItem('resourceNavHotTags') || '[]');
+        el.value = local.length > 0 ? local.join(',') : '';
+        return;
+      }
+      try {
+        var cfg = await apiRequest('/api/config');
+        if (cfg && cfg.data && cfg.data.hotTags) {
+          el.value = cfg.data.hotTags.join(',');
+        }
+      } catch(e) {
+        console.error('加载热词失败', e);
+      }
+    }
+
+    function closeApiConfigModal() {
+      document.getElementById('apiConfigModal').classList.remove('active');
+    }
+
+    function saveApiConfig() {
+      var apiUrl = document.getElementById('apiBaseUrl').value.trim();
+      var enabled = document.getElementById('apiEnabled').checked;
+      var errorEl = document.getElementById('apiConfigError');
+      var successEl = document.getElementById('apiConfigSuccess');
+
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      if (enabled && !apiUrl) {
+        errorEl.textContent = '启用 API 时必须填写 API 地址';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      // 移除末尾的斜杠
+      if (apiUrl && apiUrl.endsWith('/')) {
+        apiUrl = apiUrl.slice(0, -1);
+      }
+
+      API_BASE = enabled ? apiUrl : '';
+      localStorage.setItem(API_BASE_KEY, API_BASE);
+      
+      // 保存热词
+      var hotTagsStr = document.getElementById('hotTagsInput').value.trim();
+      var hotTags = hotTagsStr ? hotTagsStr.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+      localStorage.setItem('resourceNavHotTags', JSON.stringify(hotTags));
+      if (enabled && hotTags.length > 0) {
+        apiRequest('/api/config', {
+          method: 'PUT',
+          body: { key: 'hotTags', value: hotTags }
+        }).catch(function(e) { console.error('保存热词到云端失败', e); });
+      }
+      
+      localStorage.setItem(API_ENABLED_KEY, enabled ? 'true' : 'false');
+
+      successEl.style.display = 'block';
+      updateApiHint();
+
+      setTimeout(function() {
+        closeApiConfigModal();
+        if (isApiMode()) {
+          loadFromApi();
+        }
+      }, 1500);
+    }
+
+    async function testApiConnection() {
+      var apiUrl = document.getElementById('apiBaseUrl').value.trim();
+      var errorEl = document.getElementById('apiConfigError');
+      var successEl = document.getElementById('apiConfigSuccess');
+
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+
+      if (!apiUrl) {
+        errorEl.textContent = '请先填写 API 地址';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      // 移除末尾的斜杠
+      if (apiUrl.endsWith('/')) {
+        apiUrl = apiUrl.slice(0, -1);
+      }
+
+      try {
+        const response = await fetch(apiUrl + '/api/stats');
+        const data = await response.json();
+
+        if (data.code === 0) {
+          successEl.textContent = '连接成功!当前共有 ' + data.data.total + ' 条资源';
+          successEl.style.display = 'block';
+        } else {
+          errorEl.textContent = 'API 返回错误: ' + (data.msg || '未知错误');
+          errorEl.style.display = 'block';
+        }
+      } catch (err) {
+        errorEl.textContent = '连接失败: ' + err.message;
+        errorEl.style.display = 'block';
+      }
+    }
+
+    // ==================== 事件监听 ====================
+
+    // 图标 & 截图预览
+    function previewIcon() {
+      var url = document.getElementById('resIcon').value.trim();
+      var img = document.getElementById('iconPreview');
+      if (url) {
+        img.src = url;
+        img.style.display = 'block';
+      } else {
+        img.style.display = 'none';
+      }
+    }
+
+    function previewScreenshot() {
+      var url = document.getElementById('resScreenshot').value.trim();
+      var img = document.getElementById('screenshotPreview');
+      if (url) {
+        img.src = url;
+        img.style.display = 'block';
+      } else {
+        img.style.display = 'none';
+      }
+    }
+
+    // 图片上传
+    var _uploadField = '';
+    function uploadImage(field) {
+      _uploadField = field;
+      document.getElementById('_uploadInput').click();
+    }
+
+    function handleImageSelect(input) {
+      var file = input.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        alert('图片不能超过 5MB');
+        input.value = '';
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var dataUrl = ev.target.result;
+        var b64 = dataUrl.split(',')[1];
+        var body = {
+          resourceId: document.getElementById('resId').value || 'upload',
+          field: _uploadField,
+          filename: file.name,
+          data: b64
+        };
+        var input = document.getElementById(_uploadField === 'icon' ? 'resIcon' : 'resScreenshot');
+        input.value = '上传中...';
+        input.disabled = true;
+        apiRequest('/api/upload', { method: 'POST', body: body })
+          .then(function(r) {
+            input.value = r.url;
+            input.disabled = false;
+            if (_uploadField === 'icon') previewIcon();
+            else previewScreenshot();
+          })
+          .catch(function(err) {
+            alert('上传失败: ' + err.message);
+            input.value = '';
+            input.disabled = false;
+          });
+      };
+      reader.readAsDataURL(file);
+      input.value = '';
+    }
+
+    document.getElementById('resourceModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+    document.getElementById('exportModal').addEventListener('click', function(e) {
+      if (e.target === this) closeExportModal();
+    });
+    document.getElementById('passwordModal').addEventListener('click', function(e) {
+      if (e.target === this) closePasswordModal();
+    });
+    document.getElementById('apiConfigModal').addEventListener('click', function(e) {
+      if (e.target === this) closeApiConfigModal();
+    });
+
+    // ==================== 影视资源管理 ====================
+    var currentTab = 'resources';
+    var movieSearchResults = [];
+    var movieDetailData = null;
+    var movieTempPanLinks = [];
+
+    function switchTab(tab) {
+      currentTab = tab;
+      var tabs = document.querySelectorAll('.tab-nav button');
+      for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+      // 先全部隐藏
+      document.getElementById('resourceSection').style.display = 'none';
+      document.getElementById('movieSection').classList.remove('active');
+      document.getElementById('movieSection').style.display = 'none';
+      document.getElementById('defaultCardsSection').style.display = 'none';
+      document.getElementById('btnAddResource').style.display = 'none';
+      if (tab === 'resources') {
+        tabs[0].classList.add('active');
+        document.getElementById('resourceSection').style.display = 'block';
+        document.getElementById('btnAddResource').style.display = '';
+      } else if (tab === 'movies') {
+        tabs[1].classList.add('active');
+        document.getElementById('movieSection').classList.add('active');
+        document.getElementById('movieSection').style.display = 'block';
+        loadImportedMovies();
+      } else if (tab === 'defaultcards') {
+        tabs[2].classList.add('active');
+        document.getElementById('defaultCardsSection').style.display = 'block';
+        dcLoadCards();
+      }
+      var hintEl = document.getElementById('apiConfigHint');
+      if (hintEl) hintEl.style.display = tab === 'resources' ? '' : 'none';
+      if (tab === 'resources') document.getElementById('statsGrid') && (document.getElementById('statsGrid').style.display = '');
+      else document.getElementById('statsGrid') && (document.getElementById('statsGrid').style.display = 'none');
+    }
+
+    function searchMovie() {
+      var query = document.getElementById('movieSearchInput').value.trim();
+      var type = document.getElementById('movieSearchType').value;
+      if (!query) return alert('请输入影视名称');
+      var statusEl = document.getElementById('movieSearchStatus');
+      statusEl.style.display = 'block';
+      statusEl.textContent = '正在搜索 TMDB...';
+      movieSearchResults = [];
+      movieDetailData = null;
+      movieTempPanLinks = [];
+      document.getElementById('movieDetailPreview').style.display = 'none';
+      var apiUrl = API_BASE ? (API_BASE.replace(/\/$/, '') + '/api/movies/search') : null;
+      if (!apiUrl) return alert('请先在 API 配置中填入 Worker 地址');
+      fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: query, type: type }) })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.code !== 0) { statusEl.textContent = '搜索失败: ' + data.msg; return; }
+          movieSearchResults = data.data;
+          statusEl.style.display = 'none';
+          renderMovieSearchResults();
+        })
+        .catch(function(e) { statusEl.textContent = '搜索失败: ' + e.message; });
+    }
+
+    function renderMovieSearchResults() {
+      var grid = document.getElementById('movieGrid');
+      if (!movieSearchResults.length) { grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">未找到匹配的影视</div></div>'; return; }
+      var html = '';
+      for (var i = 0; i < movieSearchResults.length; i++) {
+        var m = movieSearchResults[i];
+        html += '<div class="movie-card" onclick="selectMovie(' + i + ')">' +
+          '<img src="' + (m.poster || 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="240" fill="%2321262d"><text x="80" y="120" text-anchor="middle" fill="%236e7681" font-size="14">' + (m.title||'').substring(0,4) + '</text></svg>')) + '" alt="" onerror="this.src=\'data:image/svg+xml,\'+encodeURIComponent(\'<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"160\" height=\"240\" fill=\"%2321262d\"><text x=\"80\" y=\"120\" text-anchor=\"middle\" fill=\"%236e7681\" font-size=\"14\">\'+escapeHtml(m.title).substring(0,4)+\'</text></svg>\')">' +
+          '<div class="movie-info"><div class="movie-title">' + m.title + '</div>' +
+          '<div class="movie-meta">' + (m.year || '?') + ' ⭐' + (m.rating || 'N/A') + '</div></div></div>';
+      }
+      grid.innerHTML = html;
+    }
+
+    function selectMovie(idx) {
+      var m = movieSearchResults[idx];
+      if (!m) return;
+      var statusEl = document.getElementById('movieSearchStatus');
+      statusEl.style.display = 'block';
+      statusEl.textContent = '正在获取详情...';
+      var apiUrl = API_BASE ? (API_BASE.replace(/\/$/, '') + '/api/movies/detail') : null;
+      fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tmdbId: m.tmdbId, type: m.mediaType || 'movie' }) })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          statusEl.style.display = 'none';
+          if (data.code !== 0) { alert('获取详情失败: ' + data.msg); return; }
+          movieDetailData = data.data;
+          movieTempPanLinks = [];
+          renderMoviePreview();
+          // 自动匹配网盘
+          autoMatchPanLinks(m.title || m.originalTitle, function(matchedCount) {
+            if (matchedCount > 0) {
+              statusEl.style.display = 'block';
+              statusEl.textContent = '✅ 已自动匹配 ' + matchedCount + ' 个网盘链接，可手动调整后导入';
+              setTimeout(function() { statusEl.style.display = 'none'; }, 4000);
+            }
+          });
+        })
+        .catch(function(e) { statusEl.textContent = '获取详情失败: ' + e.message; });
+    }
+
+    // PanSou 类型 → 项目网盘类型映射
+    var pansouTypeMap = {
+      'baidu': 'baidu', 'quark': 'quark', '123': '123',
+      'aliyun': 'aliyun', 'alipan': 'aliyun', 'xunlei': 'xunlei',
+      'tianyi': 'tianyi', '115': '115'
+    };
+
+    // 网盘类型名称映射
+    var moviePanNames = { baidu: '百度网盘', quark: '夸克网盘', '123': '123网盘', aliyun: '阿里云盘', xunlei: '迅雷云盘', tianyi: '天翼云盘', '115': '115网盘' };
+
+    // ==================== 热门排行 + 批量导入 ====================
+    var trendingResults = [];
+    var trendingChecked = {};
+    var trendingCurrentPage = 1;
+
+    function loadTrending(page) {
+      trendingCurrentPage = page || 1;
+      var statusEl = document.getElementById('movieSearchStatus');
+      statusEl.style.display = 'block';
+      statusEl.textContent = '🔥 正在获取 TMDB 流行榜...';
+      var apiUrl = API_BASE ? (API_BASE.replace(/\/$/, '') + '/api/movies/trending?page=' + trendingCurrentPage) : null;
+      if (!apiUrl) { statusEl.style.display = 'none'; return alert('请先配置 API 地址'); }
+      fetch(apiUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.code !== 0 || !data.data || !data.data.results) { statusEl.style.display = 'none'; alert('获取热门失败'); return; }
+          var movies = data.data.results;
+          statusEl.textContent = '🔍 正在并行搜索网盘链接...（' + movies.length + ' 部电影）';
+          // 前端并行搜 PanSou
+          var ptTypeMap = { baidu: 'baidu', quark: 'quark', '123': '123', aliyun: 'aliyun', alipan: 'aliyun', xunlei: 'xunlei', tianyi: 'tianyi', '115': '115' };
+          var oneYearMs = 365 * 86400000;
+          var nowMs = Date.now();
+          function searchPan(title) {
+            return fetch('https://so.252035.xyz/api/search?kw=' + encodeURIComponent(title))
+              .then(function(r) { return r.json(); })
+              .catch(function() { return { code: -1 }; });
+          }
+          var promises = movies.map(function(m) {
+            var title = m.title || m.originalTitle || '';
+            return searchPan(title).then(function(pd) {
+              var tpFiles = [];
+              if (pd.code === 0 && pd.data && pd.data.merged_by_type) {
+                Object.entries(pd.data.merged_by_type).forEach(function(entry) {
+                  var pType = entry[0];
+                  var items = entry[1];
+                  if (Array.isArray(items)) {
+                    items.forEach(function(item) {
+                      var dt = new Date(item.datetime || 0).getTime();
+                      tpFiles.push({ type: pType, url: item.url || '', password: item.password || '', datetime: item.datetime || '', likelyExpired: item.datetime ? (nowMs - dt > oneYearMs) : true });
+                    });
+                  }
+                });
+              }
+              // 中文搜不到，用英文原名再试
+              if (tpFiles.length === 0 && m.originalTitle && m.originalTitle !== title) {
+                return searchPan(m.originalTitle).then(function(pd2) {
+                  if (pd2.code === 0 && pd2.data && pd2.data.merged_by_type) {
+                    Object.entries(pd2.data.merged_by_type).forEach(function(entry) {
+                      var pType = entry[0];
+                      var items = entry[1];
+                      if (Array.isArray(items)) {
+                        items.forEach(function(item) {
+                          var dt = new Date(item.datetime || 0).getTime();
+                          tpFiles.push({ type: pType, url: item.url || '', password: item.password || '', datetime: item.datetime || '', likelyExpired: item.datetime ? (nowMs - dt > oneYearMs) : true });
+                        });
+                      }
+                    });
+                  }
+                  return tpFiles;
+                }).catch(function() { return tpFiles; });
+              }
+              return tpFiles;
+            }).then(function(tpFiles) {
+              var tpLinks = [];
+              var tpAdded = {};
+              for (var j = 0; j < tpFiles.length; j++) {
+                if (tpFiles[j].likelyExpired) continue;
+                var tpm = ptTypeMap[tpFiles[j].type];
+                if (!tpm || tpAdded[tpm]) continue;
+                tpLinks.push({ type: tpm, url: tpFiles[j].url || '', code: tpFiles[j].password || '', expired: false });
+                tpAdded[tpm] = true;
+              }
+              if (tpLinks.length === 0) {
+                for (var j2 = 0; j2 < tpFiles.length; j2++) {
+                  var tpm2 = ptTypeMap[tpFiles[j2].type];
+                  if (!tpm2 || tpAdded[tpm2]) continue;
+                  tpLinks.push({ type: tpm2, url: tpFiles[j2].url || '', code: tpFiles[j2].password || '', expired: true });
+                  tpAdded[tpm2] = true;
+                }
+              }
+              m.panLinks = tpLinks;
+              m.panTotal = tpFiles.length;
+              m.panExpired = tpFiles.filter(function(f) { return f.likelyExpired; }).length;
+              return m;
+            });
+          });
+          Promise.all(promises).then(function(results) {
+            trendingResults = results;
+            trendingChecked = {};
+            statusEl.style.display = 'none';
+            document.getElementById('trendingPanel').style.display = 'block';
+            document.getElementById('trendingPage').textContent = trendingCurrentPage;
+            document.getElementById('movieSearchStatus').style.display = 'block';
+            document.getElementById('movieSearchStatus').textContent = '✅ 找到 ' + trendingResults.length + ' 部电影（含网盘链接标注）';
+            setTimeout(function() { document.getElementById('movieSearchStatus').style.display = 'none'; }, 5000);
+            renderTrendingGrid();
+          });
+        })
+        .catch(function(e) { statusEl.style.display = 'none'; alert('获取热门失败: ' + e.message); });
+    }
+
+    function renderTrendingGrid() {
+      var grid = document.getElementById('trendingGrid');
+      var html = '';
+      for (var i = 0; i < trendingResults.length; i++) {
+        var m = trendingResults[i];
+        var panCount = (m.panLinks || []).length;
+        var allExpired = panCount > 0 && (m.panLinks || []).every(function(p) { return p.expired; });
+        var panHtml = '<div style="font-size:11px;color:' + (allExpired ? '#f59e0b' : '#3b82f6') + ';margin-top:3px">' +
+          (allExpired ? '⚠️ ' : '🔗 ') + panCount + ' 个网盘' + (allExpired ? ' (可能过期)' : '') +
+          '</div>';
+        var checked = trendingChecked[m.tmdbId] ? ' checked' : '';
+        html += '<div class="trending-card' + (checked ? ' checked' : '') + '" onclick="toggleTrending(' + i + ', event)">' +
+          '<img src="' + (m.poster || '') + '" alt="" onerror="this.style.display=\'none\'">' +
+          '<div class="trending-info">' +
+          '<div class="trending-title">' + (i + 1) + '. ' + escapeHtml(m.title) + '</div>' +
+          '<div class="trending-meta">📅 ' + (m.year || '?') + ' ⭐ ' + (m.rating || 'N/A') + ' 🔥 ' + (m.popularity || 0).toFixed(0) + '</div>' +
+          panHtml +
+          '</div>' +
+          '<input type="checkbox" class="trending-check" ' + (checked ? 'checked' : '') + ' onclick="event.stopPropagation();toggleTrending(' + i + ')">' +
+          '</div>';
+      }
+      grid.innerHTML = html;
+    }
+
+    function toggleTrending(idx, evt) {
+      if (evt) evt.stopPropagation();
+      var m = trendingResults[idx];
+      if (!m) return;
+      if (trendingChecked[m.tmdbId]) {
+        delete trendingChecked[m.tmdbId];
+      } else {
+        trendingChecked[m.tmdbId] = true;
+      }
+      // 重新渲染以更新选中样式
+      var card = document.getElementById('trendingGrid').children[idx];
+      if (card) {
+        card.classList.toggle('checked', !!trendingChecked[m.tmdbId]);
+        var cb = card.querySelector('.trending-check');
+        if (cb) cb.checked = !!trendingChecked[m.tmdbId];
+      }
+    }
+
+    function toggleAllTrending(val) {
+      if (val) {
+        for (var i = 0; i < trendingResults.length; i++) {
+          trendingChecked[trendingResults[i].tmdbId] = true;
+        }
+      } else {
+        trendingChecked = {};
+      }
+      renderTrendingGrid();
+    }
+
+    function bulkImportTrending() {
+      var ids = Object.keys(trendingChecked);
+      if (ids.length === 0) return alert('请先勾选要导入的影视');
+      if (!confirm('确定批量导入 ' + ids.length + ' 部影视（含网盘链接）？')) return;
+      var statusEl = document.getElementById('bulkImportStatus');
+      statusEl.style.display = 'block';
+      statusEl.textContent = '⏳ 正在批量导入 ' + ids.length + ' 部...';
+      var apiUrl = API_BASE ? (API_BASE.replace(/\/$/, '') + '/api/movies/bulk-import') : null;
+      if (!apiUrl) { statusEl.style.display = 'none'; return alert('请先配置 API 地址'); }
+      // 构造 movies 数组，带预匹配的 panLinks
+      var moviesToImport = trendingResults.filter(function(m) { return trendingChecked[m.tmdbId]; });
+      fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ movies: moviesToImport, tmdbIds: ids.map(Number) }) })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          statusEl.textContent = '✅ 导入完成！成功 ' + (data.data ? data.data.imported : '?') + ' 部' +
+            (data.data && data.data.failed > 0 ? '，失败 ' + data.data.failed + ' 部' : '');
+          trendingChecked = {};
+          renderTrendingGrid();
+          loadImportedMovies();
+          setTimeout(function() { statusEl.style.display = 'none'; }, 4000);
+        })
+        .catch(function(e) { statusEl.textContent = '导入失败: ' + e.message; });
+    }
+
+    function autoMatchPanLinks(title, callback) {
+      if (!title) { if (callback) callback(0); return; }
+      var pansouUrl = API_BASE ? (API_BASE.replace(/\/$/, '') + '/api/pansou/search?q=' + encodeURIComponent(title)) : null;
+      if (!pansouUrl) { if (callback) callback(0); return; }
+      var statusEl = document.getElementById('movieSearchStatus');
+      statusEl.style.display = 'block';
+      statusEl.textContent = '🔄 正在全网盘搜索匹配...';
+      fetch(pansouUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.code !== 0 || !data.data || !data.data.results) { statusEl.style.display = 'none'; if (callback) callback(0); return; }
+          var results = data.data.results;
+          // 按网盘类型去重
+          var added = {};
+          for (var i = 0; i < results.length; i++) {
+            var r = results[i];
+            var mappedType = pansouTypeMap[r.type];
+            if (!mappedType) continue;
+            if (added[mappedType]) continue; // 每种网盘只取一个
+            // 跳过明显非影视的（如原声带、电子书）
+            if ((r.note || '').indexOf('原声') >= 0 || (r.note || '').indexOf('OST') >= 0) continue;
+            if ((r.note || '').indexOf('epub') >= 0 || (r.note || '').indexOf('电子书') >= 0) continue;
+            added[mappedType] = {
+              type: mappedType,
+              name: moviePanNames[mappedType] || mappedType,
+              link: r.url,
+              code: r.password || ''
+            };
+          }
+          var types = Object.keys(added);
+          for (var t = 0; t < types.length; t++) {
+            movieTempPanLinks.push(added[types[t]]);
+          }
+          renderMoviePanLinks();
+          statusEl.style.display = 'none';
+          if (callback) callback(types.length);
+        })
+        .catch(function() { statusEl.style.display = 'none'; if (callback) callback(0); });
+    }
+
+    function renderMoviePreview() {
+      var d = movieDetailData;
+      if (!d) return;
+      document.getElementById('movieDetailPreview').style.display = 'block';
+      document.getElementById('moviePreviewPoster').src = d.poster || '';
+      document.getElementById('moviePreviewTitle').textContent = d.title + (d.originalTitle && d.originalTitle !== d.title ? ' (' + d.originalTitle + ')' : '');
+      document.getElementById('moviePreviewDirector').textContent = d.director || '未知';
+      document.getElementById('moviePreviewCast').textContent = d.castList || '未知';
+      document.getElementById('moviePreviewYear').textContent = d.year || '?';
+      document.getElementById('moviePreviewRating').textContent = d.rating || 'N/A';
+      document.getElementById('moviePreviewGenres').textContent = d.genres || '';
+      document.getElementById('moviePreviewOverview').textContent = d.overview || '';
+      document.getElementById('movieAddPanLink').value = '';
+      document.getElementById('movieAddPanCode').value = '';
+      renderMoviePanLinks();
+    }
+
+    function renderMoviePanLinks() {
+      var container = document.getElementById('moviePanLinks');
+      var html = '';
+      var panNames = { baidu: '百度网盘', lanzou: '蓝奏云', '123pan': '123网盘', aliyun: '移动云盘', quark: '夸克网盘', xunlei: '迅雷云盘' };
+      for (var i = 0; i < movieTempPanLinks.length; i++) {
+        var p = movieTempPanLinks[i];
+        html += '<span style="background:#21262d;border:1px solid #30363d;border-radius:6px;padding:4px 10px;font-size:12px;display:inline-flex;align-items:center;gap:6px">' +
+          panNames[p.type] + ': ' + (p.link||'').substring(0,30) + (p.code ? ' [' + p.code + ']' : '') +
+          '<a href="#" onclick="removeMoviePan(' + i + ');return false;" style="color:#f85149;text-decoration:none;margin-left:4px">&times;</a></span>';
+      }
+      container.innerHTML = html || '<span style="color:#6e7681;font-size:13px">暂无网盘链接</span>';
+    }
+
+    function addMoviePanLink() {
+      var type = document.getElementById('movieAddPanType').value;
+      var link = document.getElementById('movieAddPanLink').value.trim();
+      var code = document.getElementById('movieAddPanCode').value.trim();
+      if (!link) return alert('请输入网盘链接');
+      var panNames = { baidu: '百度网盘', lanzou: '蓝奏云', '123pan': '123网盘', aliyun: '移动云盘', quark: '夸克网盘', xunlei: '迅雷云盘' };
+      movieTempPanLinks.push({ type: type, name: panNames[type], link: link, code: code });
+      document.getElementById('movieAddPanLink').value = '';
+      document.getElementById('movieAddPanCode').value = '';
+      renderMoviePanLinks();
+    }
+
+    function removeMoviePan(idx) {
+      movieTempPanLinks.splice(idx, 1);
+      renderMoviePanLinks();
+    }
+
+    function importMovie() {
+      if (!movieDetailData) return;
+      if (movieTempPanLinks.length === 0 && !confirm('没有添加网盘链接，确定导入吗？')) return;
+      var apiUrl = API_BASE ? (API_BASE.replace(/\/$/, '') + '/api/movies/import') : null;
+      if (!apiUrl) return alert('请先配置 API 地址');
+      var payload = {
+        tmdbId: movieDetailData.tmdbId, title: movieDetailData.title,
+        originalTitle: movieDetailData.originalTitle, poster: movieDetailData.poster,
+        backdrop: movieDetailData.backdrop, director: movieDetailData.director,
+        castList: movieDetailData.castList, year: movieDetailData.year,
+        rating: movieDetailData.rating, overview: movieDetailData.overview,
+        genres: movieDetailData.genres, panLinks: movieTempPanLinks
+      };
+      var statusEl = document.getElementById('movieSearchStatus');
+      statusEl.style.display = 'block';
+      statusEl.textContent = '正在导入...';
+      fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          statusEl.style.display = 'none';
+          if (data.code !== 0) { alert('导入失败: ' + data.msg); return; }
+          alert('✅ 导入成功！');
+          document.getElementById('movieDetailPreview').style.display = 'none';
+          movieDetailData = null;
+          movieTempPanLinks = [];
+          loadImportedMovies();
+        })
+        .catch(function(e) { statusEl.textContent = '导入失败: ' + e.message; });
+    }
+
+    function loadImportedMovies() {
+      var apiUrl = API_BASE ? (API_BASE.replace(/\/$/, '') + '/api/movies?size=200&page=1') : null;
+      if (!apiUrl) { document.getElementById('movieImportedGrid').innerHTML = '<div class="empty-state"><div class="empty-text">请先配置 API 地址</div></div>'; return; }
+      fetch(apiUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var grid = document.getElementById('movieImportedGrid');
+          if (!data.data || !data.data.list || !data.data.list.length) {
+            grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">暂无已入库影视</div></div>';
+            return;
+          }
+          var html = '';
+          for (var i = 0; i < data.data.list.length; i++) {
+            var m = data.data.list[i];
+            var panCount = (m.panLinks || []).length;
+            html += '<div class="movie-card" onclick="viewMovieDetail(\'' + m.id + '\')">' +
+              '<img src="' + (m.poster || '') + '" alt="" onerror="this.style.display=\'none\'">' +
+              '<div class="movie-info"><div class="movie-title">' + m.title + '</div>' +
+              '<div class="movie-meta">' + (m.year || '?') + ' ⭐' + (m.rating || 'N/A') + '</div>' +
+              (panCount > 0 ? '<div class="movie-pan">🔗 ' + panCount + '个网盘</div>' : '') +
+              '<button class="btn-sm" style="margin-top:6px;width:100%;background:#da3633;color:white;border:none" onclick="event.stopPropagation();deleteMovie(\'' + m.id + '\')">删除</button></div></div>';
+          }
+          grid.innerHTML = html;
+        })
+        .catch(function(e) { document.getElementById('movieImportedGrid').innerHTML = '<div class="empty-text">加载失败</div>'; });
+    }
+
+    function viewMovieDetail(id) {
+      var apiUrl = API_BASE ? (API_BASE.replace(/\/$/, '') + '/api/movies/' + id) : null;
+      if (!apiUrl) return;
+      fetch(apiUrl).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.code !== 0) return;
+        var d = data.data;
+        alert(d.title + '\n\n导演: ' + d.director + '\n主演: ' + d.castList + '\n年份: ' + d.year + '\n评分: ' + d.rating + '\n\n' + d.overview + '\n\n网盘数量: ' + (d.panLinks||[]).length);
+      });
+    }
+
+    function deleteMovie(id) {
+      if (!confirm('确定删除这部影视吗？')) return;
+      var apiUrl = API_BASE ? (API_BASE.replace(/\/$/, '') + '/api/movies/' + id) : null;
+      if (!apiUrl) return;
+      fetch(apiUrl, { method: 'DELETE' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { loadImportedMovies(); })
+        .catch(function(e) { alert('删除失败: ' + e.message); });
+    }
+
+    function autoMatchAllPan() {
+      if (!confirm('将为所有无网盘链接的影视自动搜索 PanSou 并补全链接，确定吗？')) return;
+      var apiUrl = API_BASE ? (API_BASE.replace(/\/$/, '') + '/api/movies/auto-match-pan') : null;
+      if (!apiUrl) return alert('请先配置 API 地址');
+      var statusEl = document.getElementById('autoMatchStatus');
+      statusEl.style.display = 'block';
+      statusEl.textContent = '🔍 正在批量搜索网盘...';
+      fetch(apiUrl, { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.code !== 0) { statusEl.textContent = '❌ 失败: ' + data.msg; return; }
+          var d = data.data;
+          statusEl.textContent = '✅ 完成！匹配到网盘的: ' + d.matched + ' 部（共扫描 ' + d.total + ' 部）';
+          if (d.results && d.results.length > 0) {
+            statusEl.textContent += ' | 详情: ' + d.results.map(function(r) { return r.title + '(' + r.count + '个)'; }).join(', ');
+          }
+          setTimeout(function() { loadImportedMovies(); }, 1500);
+        })
+        .catch(function(e) { statusEl.textContent = '❌ 失败: ' + e.message; });
+    }
+
+    // ==================== 默认卡片管理 ====================
+    var dcAllData = {};
+    var dcCurrentCards = [];
+    var dcEditIndex = -1; // 当前编辑的卡片索引
+    var dcDragIndex = -1; // 拖拽源索引
+    var dcCurrentCat = 'home'; // 当前选中的分类
+
+    function dcSelectCat(btn, cat) {
+      dcCurrentCat = cat;
+      // 切换 active 样式
+      var tabs = document.querySelectorAll('.dc-cat-tab');
+      for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+      btn.classList.add('active');
+      dcLoadCards();
+    }
+
+    function dcGetApiBase() {
+      // 优先从 localStorage 读取用户配置的 API_BASE
+      var saved = localStorage.getItem(API_BASE_KEY);
+      var enabled = localStorage.getItem(API_ENABLED_KEY);
+      var base = saved && enabled === 'true' ? saved : 'https://api.a520.cc.cd';
+      return base.replace(/\/$/, '');
+    }
+
+    function dcLoadCards() {
+      var cat = dcCurrentCat;
+      var loadingEl = document.getElementById('dcLoading');
+      var emptyEl = document.getElementById('dcEmpty');
+      var listEl = document.getElementById('dcList');
+      if (loadingEl) loadingEl.style.display = 'block';
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (listEl) listEl.innerHTML = '<div style="color:#f0883e;padding:20px;text-align:center">⏳ 正在加载卡片数据...</div>';
+      var apiBase = dcGetApiBase();
+      console.log('[DEBUG] dcLoadCards() fetching, API_BASE=', apiBase);
+      fetch(apiBase + '/api/default-cards', { cache: 'no-store' })
+        .then(function(r) {
+          console.log('[DEBUG] dcLoadCards() response status:', r.status);
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function(data) {
+          console.log('[DEBUG] dcLoadCards() raw data:', data);
+          if (data.code === 0 && data.data) {
+            // API 返回的是扁平数组格式：[{category:"home",...}, {category:"ai",...}]
+            // 需要转换为按分类分组的对象格式：{home:[...], ai:[...]}
+            if (Array.isArray(data.data)) {
+              var grouped = {};
+              for (var i = 0; i < data.data.length; i++) {
+                var item = data.data[i];
+                var c = item.category || 'home';
+                if (!grouped[c]) grouped[c] = [];
+                grouped[c].push(item);
+              }
+              dcAllData = grouped;
+              console.log('[DEBUG] dcLoadCards() converted to groups:', Object.keys(grouped));
+            } else {
+              // 已经是对象格式，直接使用
+              dcAllData = data.data;
+            }
+          } else {
+            console.warn('[DEBUG] dcLoadCards() unexpected data:', data);
+            // 显示错误信息到页面
+            if (listEl) listEl.innerHTML = '<div style="color:#f85149;padding:20px;text-align:center">❌ API 返回异常: ' + JSON.stringify(data).substring(0, 200) + '</div>';
+            if (loadingEl) loadingEl.style.display = 'none';
+            return;
+          }
+          if (loadingEl) loadingEl.style.display = 'none';
+          dcCurrentCards = (dcAllData[cat] || []).map(function(c) { return Object.assign({}, c); });
+          console.log('[DEBUG] dcLoadCards() cat=' + cat + ' cards count:', dcCurrentCards.length);
+          // 可见调试：如果卡片为空，显示原因
+          if (dcCurrentCards.length === 0 && listEl) {
+            var allKeys = Object.keys(dcAllData);
+            listEl.innerHTML = '<div style="color:#f0883e;padding:20px;text-align:center">⚠️ 分类 [' + cat + '] 无数据。可用分类: ' + (allKeys.length ? allKeys.join(', ') : '(空)') + '</div>';
+          }
+          dcEditIndex = -1;
+          dcRenderList();
+        })
+        .catch(function(e) {
+          console.error('[DEBUG] dcLoadCards() error:', e);
+          if (loadingEl) loadingEl.style.display = 'none';
+          if (listEl) listEl.innerHTML = '<div style="color:#f85149;padding:20px;text-align:center">❌ 加载失败: ' + e.message + '</div>';
+          dcCurrentCards = [];
+          dcRenderList();
+        });
+    }
+
+    function dcRenderList() {
+      var emptyEl = document.getElementById('dcEmpty');
+      var listEl = document.getElementById('dcList');
+      if (dcCurrentCards.length === 0) {
+        emptyEl.style.display = 'block';
+        listEl.innerHTML = '';
+        return;
+      }
+      emptyEl.style.display = 'none';
+      var html = '';
+      for (var i = 0; i < dcCurrentCards.length; i++) {
+        var c = dcCurrentCards[i];
+        if (dcEditIndex === i) {
+          // 编辑态：内联编辑面板
+          html += '<div class="dc-card editing">';
+          html += '<div class="dc-edit-panel">';
+          html += '<input class="dc-edit-input" id="dcEditIcon_' + i + '" value="' + dcEsc(c.icon||'') + '" placeholder="图标(emoji)" maxlength="4">';
+          html += '<input class="dc-edit-input" id="dcEditName_' + i + '" value="' + dcEsc(c.name||'') + '" placeholder="名称" maxlength="20">';
+          html += '<input class="dc-edit-input" id="dcEditUrl_' + i + '" value="' + dcEsc(c.url||'') + '" placeholder="链接">';
+          html += '<div class="dc-edit-actions">';
+          html += '<button class="dc-edit-btn dc-save-btn" onclick="dcSaveEdit(' + i + ')">保存</button>';
+          html += '<button class="dc-edit-btn dc-del-btn" onclick="dcRemove(' + i + ')">删除</button>';
+          html += '<button class="dc-edit-btn dc-cancel-btn" onclick="dcCancelEdit()">取消</button>';
+          html += '</div></div></div>';
+        } else {
+          // 展示态：图标 + 名称
+          html += '<div class="dc-card" draggable="true" oncontextmenu="event.preventDefault();dcEnterEdit(' + i + ');" ondragstart="dcOnDragStart(event,' + i + ')" ondragover="event.preventDefault();this.classList.add(\'drag-over\')" ondragleave="this.classList.remove(\'drag-over\')" ondrop="event.preventDefault();this.classList.remove(\'drag-over\');dcOnDrop(event,' + i + ')" ondragend="dcOnDragEnd(event)">';
+          html += '<div class="dc-card-inner">';
+          html += '<div class="dc-card-icon">' + dcEsc(c.icon || '🔗') + '</div>';
+          html += '<div class="dc-card-name">' + dcEsc(c.name || '') + '</div>';
+          html += '</div></div>';
+        }
+      }
+      // 末尾添加“新增卡片”占位
+      html += '<div class="dc-add-card" onclick="dcAddCard()">';
+      html += '<div class="dc-add-icon">➕</div>';
+      html += '<div style="font-size:12px">添加卡片</div>';
+      html += '</div>';
+      listEl.innerHTML = html;
+      // 如果在编辑态，聚焦图标输入框
+      if (dcEditIndex >= 0) {
+        var iconInput = document.getElementById('dcEditIcon_' + dcEditIndex);
+        if (iconInput) iconInput.focus();
+      }
+    }
+
+    function dcEnterEdit(i) {
+      dcEditIndex = i;
+      dcRenderList();
+    }
+
+    function dcSaveEdit(i) {
+      var icon = document.getElementById('dcEditIcon_' + i).value.trim();
+      var name = document.getElementById('dcEditName_' + i).value.trim();
+      var url = document.getElementById('dcEditUrl_' + i).value.trim();
+      dcCurrentCards[i] = Object.assign({}, dcCurrentCards[i], {
+        icon: icon || '🔗', name: name || '新入口', url: url || ''
+      });
+      var cat = dcCurrentCat;
+      dcAllData[cat] = dcCurrentCards.slice();
+      dcEditIndex = -1;
+      dcRenderList();
+    }
+
+    function dcCancelEdit() { dcEditIndex = -1; dcRenderList(); }
+
+    function dcEsc(s) { if(!s) return ''; var d=document.createElement('div'); d.textContent=s; return d.innerHTML.replace(/"/g,'&quot;'); }
+
+    function dcAddCard() {
+      var cat = dcCurrentCat;
+      dcCurrentCards.push({ id: cat[0] + (dcCurrentCards.length+1), icon: '🔗', name: '新卡片', url: '', logoUrl: '' });
+      dcAllData[cat] = dcCurrentCards.slice();
+      dcEditIndex = dcCurrentCards.length - 1; // 进入编辑
+      dcRenderList();
+    }
+
+    function dcRemove(i) {
+      if (!confirm('确定删除「' + (dcCurrentCards[i].name||'') + '」？')) return;
+      dcCurrentCards.splice(i,1);
+      var cat = dcCurrentCat;
+      dcAllData[cat] = dcCurrentCards.slice();
+      dcEditIndex = -1;
+      dcRenderList();
+    }
+
+    // 拖拽排序
+    function dcOnDragStart(e, i) { dcDragIndex = i; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', i); }
+    function dcOnDragEnd(e) { dcDragIndex = -1; var cards = document.querySelectorAll('.dc-card'); cards.forEach(function(c){ c.classList.remove('drag-over'); }); }
+    function dcOnDrop(e, targetIndex) {
+      e.preventDefault(); e.stopPropagation();
+      if (dcDragIndex < 0 || dcDragIndex === targetIndex) return;
+      var item = dcCurrentCards[dcDragIndex];
+      dcCurrentCards.splice(dcDragIndex, 1);
+      dcCurrentCards.splice(targetIndex, 0, item);
+      var cat = dcCurrentCat;
+      dcAllData[cat] = dcCurrentCards.slice();
+      dcDragIndex = -1;
+      dcRenderList();
+    }
+
+    function dcSaveAll() {
+      var cat = dcCurrentCat;
+      dcAllData[cat] = dcCurrentCards.slice();
+      dcEditIndex = -1;
+      var btn = document.getElementById('dcSaveBtn');
+      btn.textContent = '保存中...'; btn.disabled = true;
+      fetch(dcGetApiBase() + '/api/default-cards', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dcAllData)
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        btn.textContent = '保存到后端'; btn.disabled = false;
+        if (data.code === 0) { alert('保存成功！未登录用户将看到更新后的默认卡片。'); }
+        else { alert('保存失败: ' + (data.msg||'')); }
+      })
+      .catch(function(e) { btn.textContent = '保存到后端'; btn.disabled = false; alert('保存失败: ' + e.message); });
+    }
+  </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"73864a63d284445494eec460d632f8da","r":1}' crossorigin="anonymous"></script>
+</body>
+</html>
+
+
