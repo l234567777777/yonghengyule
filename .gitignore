@@ -1,0 +1,14 @@
+# 依赖
+node_modules/
+
+# 构建产物（多份历史构建目录，均不入库）
+dist/
+dist-prod/
+dist-prod-build/
+dist_old/
+
+# wrangler 本地状态
+.wrangler/
+
+# 临时备份（.git 损坏修复时产生，不入库）
+.git.bak/

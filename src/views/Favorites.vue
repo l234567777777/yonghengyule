@@ -34,28 +34,41 @@ import ResourceCard from '../components/ResourceCard.vue'
 
 const router = useRouter()
 const favorites = ref([])
+const isLoading = ref(false)
 
 async function loadFavorites() {
-  const favIds = JSON.parse(localStorage.getItem('favorites') || '[]')
-  if (!favIds.length) return
-
+  isLoading.value = true
   try {
-    const allResources = await api.getResources()
-    const resources = Array.isArray(allResources) ? allResources : (allResources.data || [])
-    favorites.value = resources.filter(r => favIds.includes(r.id))
-  } catch (error) {
-    console.error('加载收藏失败:', error)
+    // 优先从后端拉取
+    const res = await api.getFavorites()
+    favorites.value = Array.isArray(res) ? res : (res.data || [])
+  } catch (e) {
+    // 后端失败时回退到本地存储
+    const favIds = JSON.parse(localStorage.getItem('favorites') || '[]')
+    if (!favIds.length) { favorites.value = []; return }
+    try {
+      const allResources = await api.getResources()
+      const resources = Array.isArray(allResources) ? allResources : (allResources.data || [])
+      favorites.value = resources.filter(r => favIds.includes(r.id))
+    } catch (e2) {
+      console.error('加载收藏失败:', e2)
+    }
+  } finally {
+    isLoading.value = false
   }
 }
 
-function removeFav(id) {
+async function removeFav(id) {
+  // 同步到后端
+  try { await api.removeFavorite(id) } catch (e) { /* 忽略，保持本地可用 */ }
+  // 本地同步
   const favs = JSON.parse(localStorage.getItem('favorites') || '[]')
   const index = favs.indexOf(id)
   if (index > -1) {
     favs.splice(index, 1)
     localStorage.setItem('favorites', JSON.stringify(favs))
-    favorites.value = favorites.value.filter(r => r.id !== id)
   }
+  favorites.value = favorites.value.filter(r => r.id !== id)
 }
 
 function goHome() {

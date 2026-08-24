@@ -102,7 +102,7 @@
       </div>
     </div>
 
-    <!-- 支持的格式说�?-->
+    <!-- 支持的格式说明 -->
     <div class="formats-info">
       <h3>📋 支持的格式</h3>
       <div class="format-grid">
@@ -273,7 +273,7 @@ async function startConvert() {
   margin-bottom: 24px;
 }
 
-/* 类型选择�?*/
+/* 类型选择 */
 .type-selector {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -570,3 +570,4 @@ async function startConvert() {
     grid-template-columns: 1fr;
   }
 }
+</style>

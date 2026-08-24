@@ -2,12 +2,14 @@
   <div class="profile-page">
     <!-- 用户信息卡 -->
     <div class="user-card">
-      <div class="avatar" :style="{ background: avatarGradient }">
-        {{ userInitials }}
+      <div class="avatar-ring">
+        <div class="avatar" :style="{ background: avatarGradient }">
+          {{ userInitials }}
+        </div>
       </div>
       <div class="user-info">
         <h2 class="username">{{ user?.username || '未登录' }}</h2>
-        <p class="user-desc" v-if="user">欢迎回来</p>
+        <p class="user-desc" v-if="user">欢迎回来 👋</p>
         <p class="user-desc" v-else>登录后同步收藏数据</p>
       </div>
       <button class="login-btn" v-if="!user" @click="goLogin">登录</button>
@@ -23,7 +25,7 @@
           <span class="menu-label">我的收藏</span>
           <span class="menu-count">{{ favCount }} 个</span>
         </div>
-        <span class="menu-arrow">→</span>
+        <span class="menu-arrow">›</span>
       </router-link>
 
       <div class="menu-item" @click="clearCache">
@@ -33,7 +35,7 @@
         <div class="menu-content">
           <span class="menu-label">清除缓存</span>
         </div>
-        <span class="menu-arrow">→</span>
+        <span class="menu-arrow">›</span>
       </div>
     </div>
 
@@ -92,9 +94,11 @@ function goLogin() {
 }
 
 function clearCache() {
-  if (confirm('确定清除本地缓存？收藏数据将丢失')) {
+  if (confirm('确定清除本地缓存？收藏和自定义卡片将恢复为默认')) {
     localStorage.removeItem('favorites')
-    alert('缓存已清除')
+    localStorage.removeItem('user_custom_cards')
+    alert('缓存已清除，刷新后恢复默认卡片')
+    location.reload()
   }
 }
 
@@ -110,136 +114,165 @@ function logout() {
 
 <style scoped>
 .profile-page {
-  max-width: 800px;
+  max-width: 420px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 28px 16px 80px;
 }
 
 /* 用户卡 */
 .user-card {
   display: flex;
   align-items: center;
-  padding: 28px 24px;
-  background: #161b22;
-  border-radius: 20px;
-  margin-bottom: 16px;
-  border: 1px solid #21262d;
+  padding: 20px;
+  background: rgba(22, 27, 34, 0.55);
+  border-radius: 18px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.avatar-ring {
+  margin-right: 16px;
+  flex-shrink: 0;
+  padding: 3px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
 }
 
 .avatar {
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: 22px;
   font-weight: bold;
   color: white;
-  margin-right: 20px;
-  flex-shrink: 0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .user-info {
   flex: 1;
+  min-width: 0;
 }
 
 .username {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: #e6edf3;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-desc {
-  font-size: 14px;
+  font-size: 13px;
   color: #8b949e;
 }
 
 .login-btn {
-  padding: 10px 24px;
+  padding: 9px 20px;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
   border: none;
-  border-radius: 24px;
-  font-size: 15px;
+  border-radius: 20px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .login-btn:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 /* 菜单 */
 .menu-section {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 16px;
-  background: #1c2128;
+  padding: 14px 16px;
+  background: rgba(22, 27, 34, 0.5);
   border-radius: 14px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   text-decoration: none;
   color: #e6edf3;
   cursor: pointer;
-  transition: background 0.2s;
-  border: 1px solid #21262d;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .menu-item:hover {
-  background: #21262d;
+  background: rgba(30, 36, 48, 0.7);
+  border-color: rgba(59, 130, 246, 0.45);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.18);
+  transform: translateY(-2px);
 }
 
 .menu-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  margin-right: 14px;
+  font-size: 18px;
+  margin-right: 13px;
   flex-shrink: 0;
 }
 
 .menu-content {
   flex: 1;
+  min-width: 0;
 }
 
 .menu-label {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   display: block;
 }
 
 .menu-count {
-  font-size: 13px;
+  font-size: 12px;
   color: #8b949e;
-  margin-top: 4px;
+  margin-top: 2px;
   display: block;
 }
 
 .menu-arrow {
-  color: #6e7681;
-  font-size: 16px;
+  color: #484f58;
+  font-size: 20px;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.menu-item:hover .menu-arrow {
+  color: #8b949e;
+  transform: translateX(2px);
 }
 
 /* 退出按钮 */
 .logout-btn {
   display: block;
   width: 100%;
-  padding: 16px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 14px;
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.18);
   border-radius: 14px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -247,18 +280,19 @@ function logout() {
 }
 
 .logout-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.32);
 }
 
 /* 版本信息 */
 .app-info {
   text-align: center;
-  padding: 40px 20px;
-  color: #6e7681;
-  font-size: 14px;
+  padding: 24px 16px;
+  color: #484f58;
+  font-size: 12px;
 }
 
 .copyright {
-  margin-top: 8px;
+  margin-top: 4px;
 }
 </style>
