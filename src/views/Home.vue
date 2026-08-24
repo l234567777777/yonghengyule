@@ -254,14 +254,10 @@ const showPagination = computed(() => {
   return currentCards.value.length >= itemsPerPage
 })
 
-// 加载数据
-async function loadData() {
-  // 加载分类 - 主页固定使用本地默认分类(我的主页/AI工具/...)
-  // 不使用 API 返回的 software/learning 等分类(那些是分类页用的)
-  if (categories.value.length === 0) {
-    loadDefaultCategories()
-  }
-
+// 加载/同步卡片：拉取后台默认卡片 + 合并当前用户个性化卡片。
+// 抽取为独立函数，供初始化加载与定时轮询（实时同步）复用。
+// skipSave=true 时只刷新显示、不写回服务器（用于轮询，避免无谓写入）。
+async function syncCards(skipSave = false) {
   // 1. 加载全局默认卡片（只读），作为所有分类的基底
   const defaultsMap = {} // category -> 卡片数组
   try {
@@ -341,7 +337,7 @@ async function loadData() {
           }
         })
         cards.value = Object.values(merged).flat()
-        await saveCards() // 归一化为干净覆盖格式，保证后续后台更新持续同步
+        if (!skipSave) await saveCards() // 归一化为干净覆盖格式，保证后续后台更新持续同步
         return
       }
     } catch (e) {
@@ -371,7 +367,7 @@ async function loadData() {
           const merged = { ...defaultsMap }
           Object.entries(userMap).forEach(([cat, list]) => { merged[cat] = list })
           cards.value = Object.values(merged).flat()
-          await saveCards() // 完整快照上传到当前账户
+          if (!skipSave) await saveCards() // 完整快照上传到当前账户
           localStorage.removeItem('user_custom_cards') // 迁移完成，清除本地遗留
           return
         }
@@ -388,6 +384,16 @@ async function loadData() {
   }
   // 5. fallback: 本地默认数据
   loadDefaultData()
+}
+
+// 加载数据
+async function loadData() {
+  // 加载分类 - 主页固定使用本地默认分类(我的主页/AI工具/...)
+  // 不使用 API 返回的 software/learning 等分类(那些是分类页用的)
+  if (categories.value.length === 0) {
+    loadDefaultCategories()
+  }
+  await syncCards()
 }
 
 // 仅加载分类标签(主页专用)
@@ -687,7 +693,9 @@ function closeCatModal() {
 let defaultsSnapshot = {}
 
 // 保存卡片：仅登录用户。写入自己账户（/api/user/cards 按用户隔离）。
-// 只保存与后台默认有差异的分类（未改动的分类不写，后台更新默认时能同步到用户端）。
+// 关键：只保存「相对后台默认的差异」（用户新增 added / 修改 edited / 删除 deleted），
+// 未改动的部分一律不落库。这样下次加载时始终以最新后台默认卡片为基底，
+// 后台修改能即时同步，且不影响用户自己改/增/删的卡片。
 async function saveCards() {
   if (!isLoggedIn()) return
   try {
@@ -697,21 +705,32 @@ async function saveCards() {
       const cat = c.category || 'home'
       ;(currentByCat[cat] = currentByCat[cat] || []).push(stripCat(c))
     })
-    const defMapByCat = {}
+    const defByIdByCat = {}
     Object.entries(defaultsSnapshot).forEach(([cat, str]) => {
-      const arr = JSON.parse(str)
-      const m = {}
-      arr.forEach(c => { m[c.id] = c })
-      defMapByCat[cat] = m
+      defByIdByCat[cat] = {}
+      JSON.parse(str).forEach(c => { defByIdByCat[cat][c.id] = c })
     })
     const allCats = new Set([...Object.keys(currentByCat), ...Object.keys(defaultsSnapshot)])
     for (const cat of allCats) {
       const cur = currentByCat[cat] || []
-      const defMap = defMapByCat[cat] || {}
-      // 与默认完全一致 → 跳过，保持跟随后台默认更新
-      if (JSON.stringify(cur) === JSON.stringify(Object.values(defMap))) continue
-      // 后端要求 cards 为数组，直接存当前该分类的完整卡片数组
-      await api.put('/api/user/cards', { category: cat, cards: cur })
+      const defMap = defByIdByCat[cat] || {}
+      const curById = {}
+      cur.forEach(c => { curById[c.id] = c })
+      // 计算相对默认的差异
+      const added = cur.filter(c => !defMap[c.id])                                       // 用户新增
+      const edited = {}
+      cur.forEach(c => { if (defMap[c.id] && JSON.stringify(c) !== JSON.stringify(defMap[c.id])) edited[c.id] = c }) // 用户修改
+      const deleted = Object.keys(defMap).filter(id => !curById[id])                     // 用户删除
+      const overlay = {}
+      if (added.length) overlay.added = added
+      if (Object.keys(edited).length) overlay.edited = edited
+      if (deleted.length) overlay.deleted = deleted
+      if (Object.keys(overlay).length === 0) {
+        // 与默认完全一致：写入空覆盖，清掉可能的旧版全量快照，确保持续跟随后台
+        await api.put('/api/user/cards', { category: cat, cards: {} })
+      } else {
+        await api.put('/api/user/cards', { category: cat, cards: overlay })
+      }
     }
   } catch (e) {
     console.error('保存卡片失败:', e)
@@ -835,17 +854,28 @@ function onWindowResize() {
   fitTimer = setTimeout(fitCardNames, 200)
 }
 
+// 实时同步轮询定时器
+let cardSyncTimer = null
+
 onMounted(() => {
   loadData()
   document.addEventListener('click', onClickOutside)
   window.addEventListener('resize', onWindowResize)
   nextTick(fitCardNames)
+  // 实时同步：每 60 秒拉取一次后台默认卡片并与用户个性化卡片合并。
+  // 后台修改默认卡片后，已打开的页面会在轮询周期内自动更新，且不影响用户自己改/增/删的卡片。
+  // 若用户正在编辑（弹窗打开），则跳过本次轮询，避免打断。
+  cardSyncTimer = setInterval(() => {
+    if (showAddCard.value || editingCard.value || showAddCategory.value || editingCategory.value) return
+    syncCards(true)
+  }, 60000)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', onClickOutside)
   window.removeEventListener('resize', onWindowResize)
   clearTimeout(fitTimer)
+  if (cardSyncTimer) clearInterval(cardSyncTimer)
 })
 
 // 卡片数据/翻页/分类切换后重算字号
